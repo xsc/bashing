@@ -23,3 +23,9 @@ if [ ! -z "$1" ] && [[ "$1" != "help" ]]; then
     PROJECT_ROOT=$(cd "$PROJECT_ROOT" && pwd);
 fi
 PROJECT_FILE="$PROJECT_ROOT/$BASHING_PROJECT_FILE"
+
+# Derive Paths
+SRC_PATH="$PROJECT_ROOT/src"
+CLI_PATH="$SRC_PATH/cli"
+LIB_PATH="$SRC_PATH/lib"
+

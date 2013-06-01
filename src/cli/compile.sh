@@ -48,11 +48,6 @@ if [ ! -z "$OUTPUT_FILE" ]; then
     export OUT="$OUTPUT_FILE"
 fi
 
-# Derive Paths
-SRC_PATH="$PROJECT_ROOT/src"
-CLI_PATH="$SRC_PATH/cli"
-LIB_PATH="$SRC_PATH/lib"
-
 # -------------------------------------------------------------------
 # Generate
 cd "$SRC_PATH"
