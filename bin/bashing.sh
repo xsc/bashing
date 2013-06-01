@@ -1,10 +1,10 @@
 #!/bin/bash
 export __BASHING_VERSION='0.1.0-SNAPSHOT'
-export __VERSION='0.1.0-alpha3'
+export __VERSION='0.1.0-alpha4'
 export __ARTIFACT_ID='bashing'
 export __GROUP_ID='bashing'
 BASHING_ROOT=$(cd "$(dirname "$0")" && pwd)
-BASHING_VERSION="0.1.0-SNAPSHOT"
+BASHING_VERSION="$__VERSION"
 BASHING_PROJECT_FILE="bashing.project"
 CWD=$(pwd)
 PROJECT_ROOT=$(pwd)
@@ -450,7 +450,7 @@ HELP
       status=0
       ;;
     "version")
-      echo "bashing 0.1.0-alpha3 (bash $BASH_VERSION)"
+      echo "bashing 0.1.0-alpha4 (bash $BASH_VERSION)"
       status=0
       ;;
     *)

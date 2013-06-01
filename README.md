@@ -7,7 +7,7 @@ way.
 
 ```
 mkdir -p ~/.bin 
-curl -fkLo ~/.bin/bashing https://raw.github.com/xsc/bashing/stable/bin/bashing.stable
+curl -fkLo ~/.bin/bashing https://raw.github.com/xsc/bashing/stable/bin/bashing.sh
 chmod +x ~/.bin/bashing
 ```
 
