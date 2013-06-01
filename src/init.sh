@@ -1,7 +1,7 @@
 # -------------------------------------------------------------------
 # Metadata
 BASHING_ROOT=$(cd "$(dirname "$0")" && pwd)
-BASHING_VERSION="0.1.0-SNAPSHOT"
+BASHING_VERSION="$__VERSION"
 BASHING_PROJECT_FILE="bashing.project"
 CWD=$(pwd)
 PROJECT_ROOT=$(pwd)
