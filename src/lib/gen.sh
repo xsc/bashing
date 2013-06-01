@@ -165,6 +165,13 @@ function buildHelpFunction() {
     print_out '      ;;'
 }
 
+function buildVersionFunction() {
+    print_out '    "version")'
+    print_out "      echo \"$ARTIFACT_ID $ARTIFACT_VERSION (bash \$BASH_VERSION)\""
+    print_out '      status=0'
+    print_out '      ;;'
+}
+
 function generateCli() {
     cliScripts=$(collectCliScripts);
 
@@ -178,6 +185,7 @@ function generateCli() {
     buildCliHeader
     for path in $cliScripts; do buildCliHandler "$path"; done
     if [[ "$BUILD_HELP" == "yes" ]]; then buildHelpFunction "$cliScripts"; fi
+    buildVersionFunction
     buildCliFooter
     print_out "__run \"\$@\""
     print_out 'export __STATUS="$?"'
