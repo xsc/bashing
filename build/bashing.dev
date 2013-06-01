@@ -270,7 +270,6 @@ function cli_run() {
       error "Usage: run <CLI Command> <Parameters>"
       exit 1;
   fi
-  shift
   SRC="$(echo "$CLI" | tr '.' '/').sh"
   if [ ! -e "$CLI_PATH/$SRC" ]; then
       error "No such CLI File: $SRC"
@@ -283,13 +282,14 @@ function cli_run() {
   genInclude "setup.sh"
   generateLibrary
   genInclude "before-cli.sh"
+  print_out 'shift'
+  print_out 'function __run() { echo "__run not available when running CLI task directly!" 1>&2; exit 1; }'
   genInclude "cli/$SRC"
   genInclude "after-cli.sh"
-  genInclude "shutdown.sh"
+  genInclude "cleanup.sh"
   cat "$OUT" | bash -s "$@" &
   wait "$!"
   st="$?"
-  rm "$OUT"
   exit "$st"
 }
 function cli_init() {
@@ -313,7 +313,7 @@ function cli_init() {
       error "Could not create '.gitignore'."
       exit 1;
   fi
-  for txt in "target/"; do
+  for txt in "target/" "*.swp" "*~"; do
       echo "$txt" >> "$INIT_PATH/.gitignore"
   done
   if ! touch "$INIT_PATH/bashing.project"; then
@@ -398,7 +398,7 @@ function cli_compile() {
       generateCli
       genInclude "after-cli.sh"
   fi
-  genInclude "shutdown.sh"
+  genInclude "cleanup.sh"
   if [[ "$BUILD_CLI" == "yes" ]]; then generateCliExit; fi
   cd "$CWD"
 }
@@ -409,9 +409,9 @@ function __run() {
   shift
   case "$cmd" in
     "")
-       __run "help";
-       return $?
-       ;;
+      __run "help";
+      return $?
+      ;;
     "run")
       cli_run "$@" &
       local pid="$!"

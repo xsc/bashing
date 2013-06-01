@@ -60,6 +60,6 @@ if [[ "$BUILD_CLI" == "yes" ]]; then
     generateCli
     genInclude "after-cli.sh"
 fi
-genInclude "shutdown.sh"
+genInclude "cleanup.sh"
 if [[ "$BUILD_CLI" == "yes" ]]; then generateCliExit; fi
 cd "$CWD"

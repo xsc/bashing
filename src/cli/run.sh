@@ -29,7 +29,7 @@ print_out 'shift'
 print_out 'function __run() { echo "__run not available when running CLI task directly!" 1>&2; exit 1; }'
 genInclude "cli/$SRC"
 genInclude "after-cli.sh"
-genInclude "shutdown.sh"
+genInclude "cleanup.sh"
 
 # Run Script
 cat "$OUT" | bash -s "$@" &
