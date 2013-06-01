@@ -8,7 +8,7 @@ PROJECT_ROOT=$(pwd)
 
 # -------------------------------------------------------------------
 # Find Root
-if [ -z "$1" ] || [[ "$1" == "help" ]]; then
+if [ ! -z "$1" ] && [[ "$1" != "help" ]]; then
 
     while [ -d "$PROJECT_ROOT" ]; do
         if [ -e "$PROJECT_ROOT/$BASHING_PROJECT_FILE" ]; then break; fi
