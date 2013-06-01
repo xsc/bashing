@@ -20,6 +20,8 @@
 #   .
 #   |- .project
 #   |- src
+#      |- setup.sh
+#      |- shutdown.sh
 #      |- cli
 #         |- start.sh
 #         |- stop.sh
@@ -49,6 +51,7 @@ BASHING_VERSION="0.1.0-SNAPSHOT"
 CWD=$(pwd)
 PROJECT_ROOT=""
 BUILD_HEADER="yes"
+BUILD_METADATA="yes"
 BUILD_LIBRARY="yes"
 BUILD_CLI="yes"
 BUILD_HELP="yes"
@@ -82,8 +85,15 @@ function sep() {
 function comment() { 
     if [[ "$COMPACT_OUTPUT" != "yes" ]]; then print_out "# $@"; fi; 
 }
+
 function nl() { 
     if [[ "$COMPACT_OUTPUT" != "yes" ]]; then print_out ""; fi; 
+}
+
+function includeBashFile() {
+    if [ -s "$1" ] && bash -n "$1"; then
+        sed '/^\s*#.*$/d' "$1" | sed '/^\s*$/d';
+    fi
 }
 
 # -------------------------------------------------------------------
@@ -97,6 +107,10 @@ while [ $# -gt 0 ]; do
         "--no-cli") BUILD_CLI="no";;
         "--no-header") BUILD_HEADER="no";;
         "--") shift; export PROJECT_ROOT="$1";;
+        --*)
+            echo "Invalid command line argument: $arg" 1>&2
+            exit 1
+            ;;
         *)
             if [ -z "$PROJECT_ROOT" ]; then PROJECT_ROOT="$arg";
             else echo "Invalid command line argument: $arg" 1>&2; exit 1; fi
@@ -106,12 +120,14 @@ while [ $# -gt 0 ]; do
 done
 
 # Check Parameters
-if [ -z "$PROJECT_ROOT" ]; then PROJECT_ROOT=$(pwd); fi
-PROJECT_ROOT=$(cd "$PROJECT_ROOT" && pwd);
-if [ ! -d "$PROJECT_ROOT" ]; then
+if [ -z "$PROJECT_ROOT" ]; then 
+    PROJECT_ROOT=$(pwd);
+else if [ ! -d "$PROJECT_ROOT" ]; then
     echo "No such Directory: $PROJECT_ROOT" 1>&2;
     exit 1;
-fi
+else
+    PROJECT_ROOT=$(cd "$PROJECT_ROOT" 2> /dev/null && pwd);
+fi; fi
 
 if [ ! -z "$OUTPUT_FILE" ]; then
     OUTPUT_FILE="$(cd $(dirname "$OUTPUT_FILE") && pwd)/$(basename "$OUTPUT_FILE")"
@@ -170,6 +186,15 @@ if [[ "$BUILD_HEADER" == "yes" ]]; then
     sep
 fi
 
+if [[ "$BUILD_METADATA" == "yes" ]]; then
+    print_out "export __BASHING_VERSION='$BASHING_VERSION'"
+    print_out "export __VERSION='$ARTIFACT_VERSION'"
+    print_out "export __ARTIFACT_ID='$ARTIFACT_ID'"
+    print_out "export __GROUP_ID='$GROUP_ID'"
+fi
+
+includeBashFile "$SRC_PATH/setup.sh" | redirect_out
+
 # -------------------------------------------------------------------
 # LIBRARY
 function includeLibFile() {
@@ -200,9 +225,11 @@ fi
 # CLI 
 
 function collectCliScripts() {
-    cd "$CLI_PATH"
-    find "." -type f -name "*.sh"
-    cd "$CWD"
+    if [ -d "$CLI_PATH" ]; then
+        cd "$CLI_PATH"
+        find "." -type f -name "*.sh"
+        cd "$CWD"
+    fi
 }
 
 function toFn() {
@@ -230,11 +257,7 @@ function includeCliFn() {
     if bash -n "$fullPath" 1> /dev/null; then
         comment "./cli/${path:2}"
         print_out "function ${fnName}() {"
-        sed '/^\s*#.*$/d' "$fullPath"\
-            | sed '/^\s*$/d'\
-            | sed 's/exit/return/g'\
-            | sed 's/^/  /g'\
-            | redirect_out
+        includeBashFile "$fullPath" | sed 's/^/  /g' | redirect_out
         print_out "}"
         return 0;
     fi
@@ -253,19 +276,22 @@ function buildCliHandler() {
 }
 
 function buildCliHeader() {
-    print_out "function __cli() {"
+    print_out "function __run() {"
     print_out '  local pid=""'
     print_out '  local status=255'
     print_out '  local cmd="$1"'
     print_out '  shift'
     print_out '  case "$cmd" in'
     print_out '    "")'
-    print_out '       __cli "help";'
+    print_out '       __run "help";'
     print_out '       return $?'
     print_out '       ;;'
 }
 
 function buildCliFooter() {
+    print_out '    *)'
+    print_out '      echo "Unknown Command: $cmd" 1>&2;'
+    print_out '      ;;'
     print_out '  esac'
     print_out '  if [ ! -z "$pid" ]; then'
     print_out '      wait "$pid"'
@@ -274,7 +300,6 @@ function buildCliFooter() {
     print_out '  return $status'
     print_out "}"
 }
-
 
 function buildHelpTable() {
     for path in $@; do
@@ -286,13 +311,15 @@ function buildHelpTable() {
 function buildHelpFunction() {
     print_out '    "help")'
     print_out '      echo "Usage: $0 <command> [<parameters> ...]" 1>&2'
-    print_out '      echo 1>&2'
-    print_out '      cat 1>&2 <<HELP'
-    buildHelpTable "$@" | column -s "|" -t\
-        | sed 's/^/    /'\
-        | redirect_out
-    print_out 'HELP'
-    print_out '      echo 1>&2'
+    if [ ! -z "$@" ]; then
+        print_out '      cat 1>&2 <<HELP'
+        print_out ''
+        buildHelpTable "$@" | column -s "|" -t\
+            | sed 's/^/    /'\
+            | redirect_out
+        print_out ''
+        print_out 'HELP'
+    fi
     print_out '      status=0'
     print_out '      ;;'
 }
@@ -314,6 +341,13 @@ if [[ "$BUILD_CLI" == "yes" ]]; then
     comment "[cli end]"
     nl
     sep
-    print_out "__cli \"\$@\""
+    print_out "__run \"\$@\""
+    print_out 'export __STATUS="$?"'
     cd "$CWD";
+fi
+
+includeBashFile "$SRC_PATH/shutdown.sh" | redirect_out
+
+if [[ "$BUILD_CLI" == "yes" ]]; then
+    print_out 'exit $__STATUS'
 fi
