@@ -1,6 +1,6 @@
 #!/bin/bash
 export __BASHING_VERSION='0.1.0-SNAPSHOT'
-export __VERSION='0.1.0-alpha2'
+export __VERSION='0.1.0-alpha3'
 export __ARTIFACT_ID='bashing'
 export __GROUP_ID='bashing'
 BASHING_ROOT=$(cd "$(dirname "$0")" && pwd)
@@ -8,17 +8,19 @@ BASHING_VERSION="0.1.0-SNAPSHOT"
 BASHING_PROJECT_FILE="bashing.project"
 CWD=$(pwd)
 PROJECT_ROOT=$(pwd)
-if [ ! -z "$1" ] && [[ "$1" != "help" ]]; then
-    while [ -d "$PROJECT_ROOT" ]; do
-        if [ -e "$PROJECT_ROOT/$BASHING_PROJECT_FILE" ]; then break; fi
-        PROJECT_ROOT="$PROJECT_ROOT/.."
-    done
-    if [ ! -d "$PROJECT_ROOT" ]; then
-        echo "Could not find Root Directory of this Project!" 1>&2
-        exit 1;
-    fi
-    PROJECT_ROOT=$(cd "$PROJECT_ROOT" && pwd);
-fi
+case "$1" in
+    "compile"|"uberbash"|"run")
+        while [ -d "$PROJECT_ROOT" ]; do
+            if [ -e "$PROJECT_ROOT/$BASHING_PROJECT_FILE" ]; then break; fi
+            PROJECT_ROOT="$PROJECT_ROOT/.."
+        done
+        if [ ! -d "$PROJECT_ROOT" ]; then
+            echo "Could not find Root Directory of this Project!" 1>&2
+            exit 1;
+        fi
+        PROJECT_ROOT=$(cd "$PROJECT_ROOT" && pwd);
+    ;;
+esac
 PROJECT_FILE="$PROJECT_ROOT/$BASHING_PROJECT_FILE"
 SRC_PATH="$PROJECT_ROOT/src"
 CLI_PATH="$SRC_PATH/cli"
@@ -186,6 +188,12 @@ function buildHelpFunction() {
     print_out '      status=0'
     print_out '      ;;'
 }
+function buildVersionFunction() {
+    print_out '    "version")'
+    print_out "      echo \"$ARTIFACT_ID $ARTIFACT_VERSION (bash \$BASH_VERSION)\""
+    print_out '      status=0'
+    print_out '      ;;'
+}
 function generateCli() {
     cliScripts=$(collectCliScripts);
     set -e
@@ -198,6 +206,7 @@ function generateCli() {
     buildCliHeader
     for path in $cliScripts; do buildCliHandler "$path"; done
     if [[ "$BUILD_HELP" == "yes" ]]; then buildHelpFunction "$cliScripts"; fi
+    buildVersionFunction
     buildCliFooter
     print_out "__run \"\$@\""
     print_out 'export __STATUS="$?"'
@@ -438,6 +447,10 @@ function __run() {
     compile   :  (no help available)
 
 HELP
+      status=0
+      ;;
+    "version")
+      echo "bashing 0.1.0-alpha3 (bash $BASH_VERSION)"
       status=0
       ;;
     *)
