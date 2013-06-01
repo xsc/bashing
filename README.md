@@ -12,7 +12,7 @@ TODO
 To build bashing, check out this repository and run:
 
 ```
-$ ./build/bashing.dev uberbash
+$ ./bin/bashing.dev uberbash
 Creating /git/public/bashing/target/bashing-0.1.0-SNAPSHOT.sh ...
 Uberbash created successfully.
 ```
