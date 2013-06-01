@@ -32,7 +32,7 @@ if ! touch "$INIT_PATH/.gitignore"; then
     error "Could not create '.gitignore'."
     exit 1;
 fi
-for txt in "target/"; do
+for txt in "target/" "*.swp" "*~"; do
     echo "$txt" >> "$INIT_PATH/.gitignore"
 done
 
