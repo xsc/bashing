@@ -124,9 +124,9 @@ function buildCliHeader() {
     print_out '  shift'
     print_out '  case "$cmd" in'
     print_out '    "")'
-    print_out '       __run "help";'
-    print_out '       return $?'
-    print_out '       ;;'
+    print_out '      __run "help";'
+    print_out '      return $?'
+    print_out '      ;;'
 }
 
 function buildCliFooter() {
