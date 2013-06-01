@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SELF=$(cd "$(dirname "$0")" && pwd)
-BASHING="$SELF/build/bashing.one"
+BASHING="$SELF/build/bashing.dev"
 OUT="$SELF/build/bashing-0.1.0-SNAPSHOT"
 
-$BASHING --compact -o "$OUT" && chmod u+x "$OUT"
+$BASHING compile --compact -o "$OUT" && chmod u+x "$OUT"

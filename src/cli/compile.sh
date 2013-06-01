@@ -54,25 +54,17 @@ CLI_PATH="$SRC_PATH/cli"
 LIB_PATH="$SRC_PATH/lib"
 
 # -------------------------------------------------------------------
-# Read Configuration
-s=$(artifactString)
-GROUP_ID=$(artifactGroupId "$s")
-ARTIFACT_ID=$(artifactId "$s")
-ARTIFACT_VERSION=$(artifactVersion "$s")
-if [ -z "$ARTIFACT_ID" -o -z "$ARTIFACT_VERSION" ]; then 
-    error "Invalid Artifact String in $BASHING_PROJECT_FILE: $s";
-    exit 1;
-fi
-if [ -z "$GROUP_ID" ]; then GROUP_ID="$ARTIFACT_ID"; fi
-
-# -------------------------------------------------------------------
 # Generate
 cd "$SRC_PATH"
 if [[ "$BUILD_HEADER" == "yes" ]]; then generateHeader; fi
 if [[ "$BUILD_METADATA" == "yes" ]]; then generateMetadata; fi
 genInclude "setup.sh"
 if [[ "$BUILD_LIBRARY" == "yes" ]] && [ -d "$LIB_PATH" ]; then generateLibrary; fi
-if [[ "$BUILD_CLI" == "yes" ]]; then generateCli; fi
+if [[ "$BUILD_CLI" == "yes" ]]; then 
+    genInclude "before-cli.sh"
+    generateCli
+    genInclude "after-cli.sh"
+fi
 genInclude "shutdown.sh"
 if [[ "$BUILD_CLI" == "yes" ]]; then generateCliExit; fi
 cd "$CWD"
