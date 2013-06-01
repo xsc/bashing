@@ -22,7 +22,7 @@ COMPACT="yes"
 OUT="$(mktemp)"
 generateHeader
 generateMetadata
-genInclude "setup.sh"
+genInclude "init.sh"
 generateLibrary
 genInclude "before-cli.sh"
 print_out 'shift'

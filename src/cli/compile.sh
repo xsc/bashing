@@ -53,7 +53,7 @@ fi
 cd "$SRC_PATH"
 if [[ "$BUILD_HEADER" == "yes" ]]; then generateHeader; fi
 if [[ "$BUILD_METADATA" == "yes" ]]; then generateMetadata; fi
-genInclude "setup.sh"
+genInclude "init.sh"
 if [[ "$BUILD_LIBRARY" == "yes" ]] && [ -d "$LIB_PATH" ]; then generateLibrary; fi
 if [[ "$BUILD_CLI" == "yes" ]]; then 
     genInclude "before-cli.sh"
