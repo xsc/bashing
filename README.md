@@ -5,7 +5,9 @@ way.
 
 ## Installation
 
-TODO
+```
+mkdir -p ~/.bin && curl -fkLo ~/.bin/bashing https://raw.github.com/xsc/bashing/stable/bin/bashing.stable && chmod +x ~/.bin/bashing
+```
 
 ## Bashing Bashing
 

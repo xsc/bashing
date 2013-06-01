@@ -2,7 +2,7 @@
 
 # Project File Examination
 
-RX_ID='[a-zA-Z_-]\+'
+RX_ID='[a-zA-Z][a-zA-Z0-9_-]*'
 RX_INT='\(0\|[1-9][0-9]*\)'
 RX_VERSION="$RX_INT\\.$RX_INT\\.$RX_INT\(-$RX_ID\\)\\?"
 RX_ARTIFACT_STRING="^\\s*\\(\\($RX_ID\\)\\/\\)\\?\\($RX_ID\\)\\s\\+\\($RX_VERSION\\)\\s*$"

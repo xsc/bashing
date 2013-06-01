@@ -1,6 +1,6 @@
 #!/bin/bash
 export __BASHING_VERSION='0.1.0-SNAPSHOT'
-export __VERSION='0.1.0-alpha'
+export __VERSION='0.1.0-alpha2'
 export __ARTIFACT_ID='bashing'
 export __GROUP_ID='bashing'
 BASHING_ROOT=$(cd "$(dirname "$0")" && pwd)
@@ -20,7 +20,6 @@ if [ ! -z "$1" ] && [[ "$1" != "help" ]]; then
     PROJECT_ROOT=$(cd "$PROJECT_ROOT" && pwd);
 fi
 PROJECT_FILE="$PROJECT_ROOT/$BASHING_PROJECT_FILE"
-echo $PROJECT_ROOT
 SRC_PATH="$PROJECT_ROOT/src"
 CLI_PATH="$SRC_PATH/cli"
 LIB_PATH="$SRC_PATH/lib"
@@ -233,7 +232,7 @@ function blue() { colorize "${BLUE}" "${@}"; }
 function magenta() { colorize "${MAGENTA}" "${@}"; }
 function cyan() { colorize "${CYAN}" "${@}"; }
 function white() { colorize "${WHITE}" "${@}"; }
-RX_ID='[a-zA-Z_-]\+'
+RX_ID='[a-zA-Z][a-zA-Z0-9_-]*'
 RX_INT='\(0\|[1-9][0-9]*\)'
 RX_VERSION="$RX_INT\\.$RX_INT\\.$RX_INT\(-$RX_ID\\)\\?"
 RX_ARTIFACT_STRING="^\\s*\\(\\($RX_ID\\)\\/\\)\\?\\($RX_ID\\)\\s\\+\\($RX_VERSION\\)\\s*$"
