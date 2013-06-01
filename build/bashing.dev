@@ -239,23 +239,45 @@ function artifactVersion() { artifactGet "$1" 4; }
 function artifactId() { artifactGet "$1" 3; }
 function artifactGroupId() { artifactGet "$1" 2; }
 function error() {
-    echo -n "$(red "(ERROR)") " 1>&2
+    echo -n "$(red "(ERROR)  ") " 1>&2
     echo "$@" 1>&2
+}
+function success() {
+    echo "$(green "$@")"
 }
 GROUP_ID=""
 ARTIFACT_ID=""
 ARTIFAT_VERSION=""
-if [[ "$1" == "compile" ]]; then
-    s=$(artifactString)
-    GROUP_ID=$(artifactGroupId "$s")
-    ARTIFACT_ID=$(artifactId "$s")
-    ARTIFACT_VERSION=$(artifactVersion "$s")
-    if [ -z "$ARTIFACT_ID" -o -z "$ARTIFACT_VERSION" ]; then 
-        error "Invalid Artifact String in $BASHING_PROJECT_FILE: $s";
-        exit 1;
-    fi
-    if [ -z "$GROUP_ID" ]; then GROUP_ID="$ARTIFACT_ID"; fi
-fi
+case "$1" in
+    "compile"|"uberbash")
+        s=$(artifactString)
+        GROUP_ID=$(artifactGroupId "$s")
+        ARTIFACT_ID=$(artifactId "$s")
+        ARTIFACT_VERSION=$(artifactVersion "$s")
+        if [ -z "$ARTIFACT_ID" -o -z "$ARTIFACT_VERSION" ]; then 
+            error "Invalid Artifact String in $BASHING_PROJECT_FILE: $s";
+            exit 1;
+        fi
+        if [ -z "$GROUP_ID" ]; then GROUP_ID="$ARTIFACT_ID"; fi
+    ;;
+esac
+function cli_uberbash() {
+  TARGET_PATH="$PROJECT_ROOT/target"
+  TARGET_FILE="$TARGET_PATH/$ARTIFACT_ID-$ARTIFACT_VERSION.sh"
+  if ! mkdir -p "$TARGET_PATH" 2> /dev/null; then
+      error "Could not create target directory: $TARGET_PATH";
+      exit 1;
+  fi
+  echo "Creating $TARGET_FILE ..."
+  __run "compile" "--compact" -o "$TARGET_FILE"
+  if [[ "$?" != "0" ]]; then
+      error "An Error occured while running task 'compile'."
+      exit 1;
+  fi
+  chmod +x "$TARGET_FILE" >& /dev/null
+  success "Uberbash created successfully."
+  exit 0
+}
 function cli_compile() {
   BUILD_HEADER="yes"
   BUILD_METADATA="yes"
@@ -320,6 +342,10 @@ function __run() {
        __run "help";
        return $?
        ;;
+    "uberbash")
+      cli_uberbash "$@" &
+      local pid="$!"
+      ;;
     "compile")
       cli_compile "$@" &
       local pid="$!"
@@ -328,7 +354,8 @@ function __run() {
       echo "Usage: $0 <command> [<parameters> ...]" 1>&2
       cat 1>&2 <<HELP
 
-    compile  :  (no help available)
+    uberbash  :  (no help available)
+    compile   :  (no help available)
 
 HELP
       status=0
