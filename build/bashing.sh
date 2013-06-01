@@ -63,9 +63,9 @@ OUTPUT_FILE=""
 
 function print_out() {
     if [ -z "$OUTPUT_FILE" ]; then
-        echo -e "$@";
+        echo "$@";
     else
-        echo -e "$@" >> "$OUTPUT_FILE"
+        echo "$@" >> "$OUTPUT_FILE"
     fi
 }
 
