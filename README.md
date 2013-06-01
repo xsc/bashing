@@ -7,7 +7,7 @@ way.
 
 TODO
 
-## Contributing
+## Bashing Bashing
 
 To build bashing, check out this repository and run:
 
