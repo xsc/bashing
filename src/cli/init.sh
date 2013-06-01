@@ -48,9 +48,7 @@ if touch "$h"; then
     echo "" >> "$h"
     echo "# Run this Script with:" >> "$h"
     echo "#" >> "$h"
-    echo "#  cd path/to/$ARTIFACT" >> "$h"
-    echo "#  bashing uberbash" >> "$h"
-    echo "#  ./target/$ARTIFACT-<Version>.sh hello" >> "$h"
+    echo "#   bashing run hello" >> "$h"
     echo "" >> "$h"
     echo 'echo "Hello World!"' >> "$h"
 fi

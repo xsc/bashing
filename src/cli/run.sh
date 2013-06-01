@@ -9,7 +9,6 @@ if [ -z "$CLI" ]; then
     error "Usage: run <CLI Command> <Parameters>"
     exit 1;
 fi
-shift
 
 # Derive Script Path
 SRC="$(echo "$CLI" | tr '.' '/').sh"
@@ -26,6 +25,8 @@ generateMetadata
 genInclude "setup.sh"
 generateLibrary
 genInclude "before-cli.sh"
+print_out 'shift'
+print_out 'function __run() { echo "__run not available when running CLI task directly!" 1>&2; exit 1; }'
 genInclude "cli/$SRC"
 genInclude "after-cli.sh"
 genInclude "shutdown.sh"
@@ -34,5 +35,4 @@ genInclude "shutdown.sh"
 cat "$OUT" | bash -s "$@" &
 wait "$!"
 st="$?"
-rm "$OUT"
 exit "$st"
