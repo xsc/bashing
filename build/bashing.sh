@@ -142,7 +142,7 @@ fi
 SRC_PATH="$PROJECT_ROOT/src"
 CLI_PATH="$SRC_PATH/cli"
 LIB_PATH="$SRC_PATH/lib"
-CONF="$PROJECT_ROOT/bashing.meta"
+CONF="$PROJECT_ROOT/bashing.project"
 
 # -------------------------------------------------------------------
 # Read Configuration
