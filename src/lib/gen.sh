@@ -31,6 +31,7 @@ function generateMetadata() {
 function genInclude() {
     if [ -s "$SRC_PATH/$1" ]; then
         cd "$SRC_PATH"
+        debug "Including File    ./$1 ..."
         includeBashFile "./$1" | redirect_out
         sep
         cd "$CWD"
@@ -44,6 +45,7 @@ function includeLibFile() {
     while read -r path; do
         local fullPath=$(cd "$SRC_PATH/$(dirname "$path")" && pwd)/$(basename "$path");
         if bash -n "$fullPath" 1> /dev/null; then
+            debug "Including Library $path ..."
             includeBashFile "$path" | redirect_out
             nl
         else
@@ -75,12 +77,12 @@ function collectCliScripts() {
 
 function toFn() {
     local n="$1"
-    echo "cli_$(basename "${n:2}" ".sh")" | tr '/' '_' | sed 's/_+/_/g'
+    echo "cli_${n:2:-3}" | tr '/' '_' | sed 's/_+/_/g'
 }
 
 function toCliArg() {
     local n="$1"
-    echo $(basename "${n:2}" ".sh") | tr '/' '.'
+    echo "${n:2:-3}" | tr '/' '.'
 }
 
 function includeCliFn() {
@@ -96,6 +98,7 @@ function includeCliFn() {
 
     # Create
     if bash -n "$fullPath" 1> /dev/null; then
+        debug "Including Task    $path -> $fnName ..."
         comment "./cli/${path:2}"
         print_out "function ${fnName}() {"
         includeBashFile "$fullPath" | sed 's/^/  /g' | redirect_out
@@ -195,4 +198,25 @@ function generateCli() {
 
 function generateCliExit() {
     print_out 'exit $__STATUS'
+}
+
+# ------------------------------------------------------------
+# Standalone Task Generation
+
+function generateStandaloneTask() {
+    local task="$1"
+    COMPACT="yes"
+    OUT=""
+    DEBUG="no"
+    VERBOSE="no"
+    generateHeader
+    generateMetadata
+    genInclude "init.sh"
+    generateLibrary
+    genInclude "before-task.sh"
+    print_out 'shift'
+    print_out 'function __run() { echo "__run not available when running CLI task directly!" 1>&2; exit 1; }'
+    genInclude "cli/$task"
+    genInclude "after-task.sh"
+    genInclude "cleanup.sh"
 }

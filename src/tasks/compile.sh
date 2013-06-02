@@ -56,9 +56,9 @@ if [[ "$BUILD_METADATA" == "yes" ]]; then generateMetadata; fi
 genInclude "init.sh"
 if [[ "$BUILD_LIBRARY" == "yes" ]] && [ -d "$LIB_PATH" ]; then generateLibrary; fi
 if [[ "$BUILD_CLI" == "yes" ]]; then 
-    genInclude "before-cli.sh"
+    genInclude "before-task.sh"
     generateCli
-    genInclude "after-cli.sh"
+    genInclude "after-task.sh"
 fi
 genInclude "cleanup.sh"
 if [[ "$BUILD_CLI" == "yes" ]]; then generateCliExit; fi

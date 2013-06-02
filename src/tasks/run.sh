@@ -18,21 +18,7 @@ if [ ! -e "$CLI_PATH/$SRC" ]; then
 fi
 
 # Generate Script
-COMPACT="yes"
-OUT="$(mktemp)"
-generateHeader
-generateMetadata
-genInclude "init.sh"
-generateLibrary
-genInclude "before-cli.sh"
-print_out 'shift'
-print_out 'function __run() { echo "__run not available when running CLI task directly!" 1>&2; exit 1; }'
-genInclude "cli/$SRC"
-genInclude "after-cli.sh"
-genInclude "cleanup.sh"
-
-# Run Script
-cat "$OUT" | bash -s "$@" &
+generateStandaloneTask "$SRC" | bash -s "$@" &
 wait "$!"
 st="$?"
 exit "$st"

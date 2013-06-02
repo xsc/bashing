@@ -1,6 +1,6 @@
 #!/bin/bash
-export __BASHING_VERSION='0.1.0-SNAPSHOT'
-export __VERSION='0.1.0-alpha4'
+export __BASHING_VERSION='0.1.0-alpha5'
+export __VERSION='0.1.0-alpha5'
 export __ARTIFACT_ID='bashing'
 export __GROUP_ID='bashing'
 BASHING_ROOT=$(cd "$(dirname "$0")" && pwd)
@@ -23,7 +23,7 @@ case "$1" in
 esac
 PROJECT_FILE="$PROJECT_ROOT/$BASHING_PROJECT_FILE"
 SRC_PATH="$PROJECT_ROOT/src"
-CLI_PATH="$SRC_PATH/cli"
+CLI_PATH="$SRC_PATH/tasks"
 LIB_PATH="$SRC_PATH/lib"
 function print_out() {
     if [ -z "$OUT" ]; then
@@ -75,6 +75,7 @@ function generateMetadata() {
 function genInclude() {
     if [ -s "$SRC_PATH/$1" ]; then
         cd "$SRC_PATH"
+        debug "Including File    ./$1 ..."
         includeBashFile "./$1" | redirect_out
         sep
         cd "$CWD"
@@ -85,6 +86,7 @@ function includeLibFile() {
     while read -r path; do
         local fullPath=$(cd "$SRC_PATH/$(dirname "$path")" && pwd)/$(basename "$path");
         if bash -n "$fullPath" 1> /dev/null; then
+            debug "Including Library $path ..."
             includeBashFile "$path" | redirect_out
             nl
         else
@@ -111,11 +113,11 @@ function collectCliScripts() {
 }
 function toFn() {
     local n="$1"
-    echo "cli_$(basename "${n:2}" ".sh")" | tr '/' '_' | sed 's/_+/_/g'
+    echo "cli_${n:2:-3}" | tr '/' '_' | sed 's/_+/_/g'
 }
 function toCliArg() {
     local n="$1"
-    echo $(basename "${n:2}" ".sh") | tr '/' '.'
+    echo "${n:2:-3}" | tr '/' '.'
 }
 function includeCliFn() {
     local path="$1"
@@ -126,6 +128,7 @@ function includeCliFn() {
         echo "WARN: Supply '--no-help' if you want to create your own help function." 1>&2;
     fi
     if bash -n "$fullPath" 1> /dev/null; then
+        debug "Including Task    $path -> $fnName ..."
         comment "./cli/${path:2}"
         print_out "function ${fnName}() {"
         includeBashFile "$fullPath" | sed 's/^/  /g' | redirect_out
@@ -216,6 +219,23 @@ function generateCli() {
 function generateCliExit() {
     print_out 'exit $__STATUS'
 }
+function generateStandaloneTask() {
+    local task="$1"
+    COMPACT="yes"
+    OUT=""
+    DEBUG="no"
+    VERBOSE="no"
+    generateHeader
+    generateMetadata
+    genInclude "init.sh"
+    generateLibrary
+    genInclude "before-task.sh"
+    print_out 'shift'
+    print_out 'function __run() { echo "__run not available when running CLI task directly!" 1>&2; exit 1; }'
+    genInclude "cli/$task"
+    genInclude "after-task.sh"
+    genInclude "cleanup.sh"
+}
 RED="`tput setaf 1`"
 GREEN="`tput setaf 2`"
 YELLOW="`tput setaf 3`"
@@ -251,28 +271,54 @@ function artifactVersion() { artifactGet "$1" 4; }
 function artifactId() { artifactGet "$1" 3; }
 function artifactGroupId() { artifactGet "$1" 2; }
 function error() {
-    echo -n "$(red "(ERROR)  ") " 1>&2
+    echo -n "$(red "(ERROR) ") " 1>&2
     echo "$@" 1>&2
+}
+function fatal() {
+    error "$@";
+    exit 1;
 }
 function success() {
     echo "$(green "$@")"
 }
+function verbose() {
+    if [[ "$VERBOSE" != "no" ]] || [ -z "$VERBOSE" ]; then
+        echo "$@" 
+    fi
+}
+function debug() {
+    if [[ "$DEBUG" == "yes" ]]; then
+        echo -n "$(yellow "(DEBUG)  ")";
+        echo "$@";
+    fi
+}
 GROUP_ID=""
 ARTIFACT_ID=""
-ARTIFAT_VERSION=""
-case "$1" in
-    "compile"|"uberbash")
-        s=$(artifactString)
-        GROUP_ID=$(artifactGroupId "$s")
-        ARTIFACT_ID=$(artifactId "$s")
-        ARTIFACT_VERSION=$(artifactVersion "$s")
-        if [ -z "$ARTIFACT_ID" -o -z "$ARTIFACT_VERSION" ]; then 
-            error "Invalid Artifact String in $BASHING_PROJECT_FILE: $s";
-            exit 1;
-        fi
-        if [ -z "$GROUP_ID" ]; then GROUP_ID="$ARTIFACT_ID"; fi
-    ;;
-esac
+ARTIFACT_VERSION=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        "--debug")
+            DEBUG="yes"
+            shift
+            ;;
+        "compile"|"uberbash"|"run")
+            s=$(artifactString)
+            GROUP_ID=$(artifactGroupId "$s")
+            ARTIFACT_ID=$(artifactId "$s")
+            ARTIFACT_VERSION=$(artifactVersion "$s")
+            if [ -z "$ARTIFACT_ID" -o -z "$ARTIFACT_VERSION" ]; then 
+                error "Invalid Artifact String in $BASHING_PROJECT_FILE: $s";
+                exit 1;
+            fi
+            if [ -z "$GROUP_ID" ]; then GROUP_ID="$ARTIFACT_ID"; fi
+            debug "Artifact: $ARTIFACT_ID"
+            debug "Group ID: $GROUP_ID"
+            debug "Version:  $ARTIFACT_VERSION"
+            debug "Root:     $PROJECT_ROOT"
+            break;;
+        *) break;;
+    esac
+done
 function cli_run() {
   CLI="$1"
   if [ -z "$CLI" ]; then
@@ -284,19 +330,7 @@ function cli_run() {
       error "No such CLI File: $SRC"
       exit 1
   fi
-  COMPACT="yes"
-  OUT="$(mktemp)"
-  generateHeader
-  generateMetadata
-  genInclude "init.sh"
-  generateLibrary
-  genInclude "before-cli.sh"
-  print_out 'shift'
-  print_out 'function __run() { echo "__run not available when running CLI task directly!" 1>&2; exit 1; }'
-  genInclude "cli/$SRC"
-  genInclude "after-cli.sh"
-  genInclude "cleanup.sh"
-  cat "$OUT" | bash -s "$@" &
+  generateStandaloneTask "$SRC" | bash -s "$@" &
   wait "$!"
   st="$?"
   exit "$st"
@@ -403,9 +437,9 @@ function cli_compile() {
   genInclude "init.sh"
   if [[ "$BUILD_LIBRARY" == "yes" ]] && [ -d "$LIB_PATH" ]; then generateLibrary; fi
   if [[ "$BUILD_CLI" == "yes" ]]; then 
-      genInclude "before-cli.sh"
+      genInclude "before-task.sh"
       generateCli
-      genInclude "after-cli.sh"
+      genInclude "after-task.sh"
   fi
   genInclude "cleanup.sh"
   if [[ "$BUILD_CLI" == "yes" ]]; then generateCliExit; fi
@@ -450,7 +484,7 @@ HELP
       status=0
       ;;
     "version")
-      echo "bashing 0.1.0-alpha4 (bash $BASH_VERSION)"
+      echo "bashing 0.1.0-alpha5 (bash $BASH_VERSION)"
       status=0
       ;;
     *)
