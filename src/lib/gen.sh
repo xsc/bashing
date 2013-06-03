@@ -125,11 +125,7 @@ function buildCliHandler() {
     local path="$1"
     local fnName=$(toFn "$path")
     local argName=$(toCliArg "$path")
-
-    print_out "    \"$argName\")"
-    print_out "      $fnName \"\$@\" &"
-    print_out '      local pid="$!"'
-    print_out '      ;;'
+    print_out "    \"$argName\") $fnName \"\$@\" & local pid=\"\$!\";;"
 }
 
 function buildCliHeader() {
@@ -139,16 +135,11 @@ function buildCliHeader() {
     print_out '  local cmd="$1"'
     print_out '  shift'
     print_out '  case "$cmd" in'
-    print_out '    "")'
-    print_out '      __run "help";'
-    print_out '      return $?'
-    print_out '      ;;'
+    print_out '    "") __run "help"; return $?;;'
 }
 
 function buildCliFooter() {
-    print_out '    *)'
-    print_out '      echo "Unknown Command: $cmd" 1>&2;'
-    print_out '      ;;'
+    print_out '    *) echo "Unknown Command: $cmd" 1>&2;;'
     print_out '  esac'
     print_out '  if [ ! -z "$pid" ]; then'
     print_out '      wait "$pid"'

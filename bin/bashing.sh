@@ -1,5 +1,5 @@
 #!/bin/bash
-export __BASHING_VERSION='0.1.0-alpha6'
+export __BASHING_VERSION='0.1.0'
 export __VERSION='0.1.0'
 export __ARTIFACT_ID='bashing'
 export __GROUP_ID='bashing'
@@ -154,10 +154,7 @@ function buildCliHandler() {
     local path="$1"
     local fnName=$(toFn "$path")
     local argName=$(toCliArg "$path")
-    print_out "    \"$argName\")"
-    print_out "      $fnName \"\$@\" &"
-    print_out '      local pid="$!"'
-    print_out '      ;;'
+    print_out "    \"$argName\") $fnName \"\$@\" & local pid=\"\$!\";;"
 }
 function buildCliHeader() {
     print_out "function __run() {"
@@ -166,15 +163,10 @@ function buildCliHeader() {
     print_out '  local cmd="$1"'
     print_out '  shift'
     print_out '  case "$cmd" in'
-    print_out '    "")'
-    print_out '      __run "help";'
-    print_out '      return $?'
-    print_out '      ;;'
+    print_out '    "") __run "help"; return $?;;'
 }
 function buildCliFooter() {
-    print_out '    *)'
-    print_out '      echo "Unknown Command: $cmd" 1>&2;'
-    print_out '      ;;'
+    print_out '    *) echo "Unknown Command: $cmd" 1>&2;;'
     print_out '  esac'
     print_out '  if [ ! -z "$pid" ]; then'
     print_out '      wait "$pid"'
@@ -420,6 +412,9 @@ function cli_uberbash() {
   success "Uberbash created successfully."
   exit 0
 }
+function cli_version() {
+  echo "bashing $(yellow "$__VERSION") (bash $BASH_VERSION)"
+}
 function cli_compile() {
   BUILD_HEADER="yes"
   BUILD_METADATA="yes"
@@ -477,30 +472,13 @@ function __run() {
   local cmd="$1"
   shift
   case "$cmd" in
-    "")
-      __run "help";
-      return $?
-      ;;
-    "run")
-      cli_run "$@" &
-      local pid="$!"
-      ;;
-    "clean")
-      cli_clean "$@" &
-      local pid="$!"
-      ;;
-    "init")
-      cli_init "$@" &
-      local pid="$!"
-      ;;
-    "uberbash")
-      cli_uberbash "$@" &
-      local pid="$!"
-      ;;
-    "compile")
-      cli_compile "$@" &
-      local pid="$!"
-      ;;
+    "") __run "help"; return $?;;
+    "run") cli_run "$@" & local pid="$!";;
+    "clean") cli_clean "$@" & local pid="$!";;
+    "init") cli_init "$@" & local pid="$!";;
+    "uberbash") cli_uberbash "$@" & local pid="$!";;
+    "version") cli_version "$@" & local pid="$!";;
+    "compile") cli_compile "$@" & local pid="$!";;
     "help")
       echo "Usage: $0 <command> [<parameters> ...]" 1>&2
       cat 1>&2 <<HELP
@@ -511,7 +489,7 @@ function __run() {
     init      :  (no help available)
     run       :  (no help available)
     uberbash  :  (no help available)
-    version   :  display version
+    version   :  (no help available)
 
 HELP
       status=0
@@ -520,9 +498,7 @@ HELP
       echo "bashing 0.1.0 (bash $BASH_VERSION)"
       status=0
       ;;
-    *)
-      echo "Unknown Command: $cmd" 1>&2;
-      ;;
+    *) echo "Unknown Command: $cmd" 1>&2;;
   esac
   if [ ! -z "$pid" ]; then
       wait "$pid"
