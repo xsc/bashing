@@ -1,6 +1,6 @@
 #!/bin/bash
-export __BASHING_VERSION='0.1.1'
-export __VERSION='0.1.1'
+export __BASHING_VERSION='0.1.2'
+export __VERSION='0.1.2'
 export __ARTIFACT_ID='bashing'
 export __GROUP_ID='bashing'
 BASHING_ROOT=$(cd "$(dirname "$0")" && pwd)
@@ -9,7 +9,7 @@ BASHING_PROJECT_FILE="bashing.project"
 CWD=$(pwd)
 PROJECT_ROOT=$(pwd)
 case "$1" in
-    "compile"|"uberbash"|"run"|"clean")
+    compile|uberbash|run|clean|new.*)
         while [ -d "$PROJECT_ROOT" ]; do
             if [ -e "$PROJECT_ROOT/$BASHING_PROJECT_FILE" ]; then break; fi
             PROJECT_ROOT="$PROJECT_ROOT/.."
@@ -144,7 +144,8 @@ function includeCliFn() {
         if [[ "$hidden" == "no" ]]; then debug "Including Task    $path -> $fnName ..."; comment "./tasks/${path:2}";
         else debug "Including Task    $path -> $fnName (hidden) ..."; comment "./hidden-tasks/${path:2}"; fi
         print_out "function ${fnName}() {"
-        includeBashFile "$fullPath" | sed 's/^/  /g' | redirect_out
+        includeBashFile "$fullPath" | redirect_out
+        print_out '  return 0;'
         print_out "}"
         return 0;
     fi
@@ -335,145 +336,166 @@ while [ $# -gt 0 ]; do
     esac
 done
 function cli_run() {
-  CLI="$1"
-  if [ -z "$CLI" ]; then
-      error "Usage: run <CLI Command> <Parameters>"
-      exit 1;
-  fi
-  SRC="$(echo "$CLI" | tr '.' '/').sh"
-  if [ ! -e "$CLI_PATH/$SRC" ]; then
-      error "No such CLI File: $SRC"
-      exit 1
-  fi
-  generateStandaloneTask "$SRC" | bash -s "$@" &
-  wait "$!"
-  st="$?"
-  exit "$st"
+CLI="$1"
+if [ -z "$CLI" ]; then
+    error "Usage: run <CLI Command> <Parameters>"
+    exit 1;
+fi
+SRC="$(echo "$CLI" | tr '.' '/').sh"
+if [ ! -e "$CLI_PATH/$SRC" ]; then
+    error "No such CLI File: $SRC"
+    exit 1
+fi
+generateStandaloneTask "$SRC" | bash -s "$@" &
+wait "$!"
+st="$?"
+exit "$st"
+  return 0;
 }
 function cli_clean() {
-  rm -rf "$PROJECT_ROOT/target"
+rm -rf "$PROJECT_ROOT/target"
+  return 0;
 }
-function cli_init() {
-  ARTIFACT="$1"
-  INIT_PATH="$2"
-  if [ -z "$ARTIFACT" ]; then
-      error "Usage: init <Artifact ID> [<Path>]"
-      exit 1;
-  fi
-  if [ -z "$INIT_PATH" ]; then INIT_PATH="./$ARTIFACT"; fi
-  if [ -d "$INIT_PATH" ]; then
-      error "$INIT_PATH already exists.";
-      exit 1;
-  fi
-  echo "Initializing $INIT_PATH ..."
-  if ! mkdir -p "$INIT_PATH/src/cli" || ! mkdir -p "$INIT_PATH/src/lib"; then
-      error "Could not create Directories 'src/cli' and 'src/lib'."
-      exit 1;
-  fi
-  if ! touch "$INIT_PATH/.gitignore"; then
-      error "Could not create '.gitignore'."
-      exit 1;
-  fi
-  for txt in "target/" "*.swp" "*~"; do
-      echo "$txt" >> "$INIT_PATH/.gitignore"
-  done
-  if ! touch "$INIT_PATH/bashing.project"; then
-      error "Could not creat 'bashing.project'."
-      exit 1;
-  fi
-  echo "$ARTIFACT 0.1.0-SNAPSHOT" >> "$INIT_PATH/bashing.project"
-  h="$INIT_PATH/src/cli/hello.sh";
-  if touch "$h"; then
-      echo "#!/bin/bash" > "$h"
-      echo "" >> "$h"
-      echo "# Run this Script with:" >> "$h"
-      echo "#" >> "$h"
-      echo "#   bashing run hello" >> "$h"
-      echo "" >> "$h"
-      echo 'echo "Hello World!"' >> "$h"
-  fi
-  success "Successfully initialized '$INIT_PATH'."
-  exit 0
+function cli_new() {
+ARTIFACT="$1"
+INIT_PATH="$2"
+if [ -z "$ARTIFACT" ]; then
+    error "Usage: new <Artifact ID> [<Path>]"
+    exit 1;
+fi
+if [ -z "$INIT_PATH" ]; then INIT_PATH="./$ARTIFACT"; fi
+if [ -d "$INIT_PATH" ]; then
+    error "$INIT_PATH already exists.";
+    exit 1;
+fi
+SRC="$INIT_PATH/src"
+TASKS="$SRC/tasks"
+LIB="$SRC/lib"
+HIDDEN="$SRC/hidden-tasks"
+PROJ="$INIT_PATH/bashing.project"
+echo "Initializing $INIT_PATH ..."
+for dir in "$TASKS" "$LIB" "$HIDDEN"; do
+    if ! mkdir -p "$dir"; then fatal "Could not create Directory: $dir"; fi
+done
+if ! touch "$INIT_PATH/.gitignore"; then fatal "Could not create '.gitignore'."; fi
+for txt in "target/" "*.swp" "*~"; do
+    echo "$txt" >> "$INIT_PATH/.gitignore"
+done
+if ! touch "$PROJ"; then fatal "Could not create File: $PROJ"; fi
+echo "$ARTIFACT 0.1.0-SNAPSHOT" >> "$PROJ"
+echo "" >> "$PROJ"
+echo "YOUR DESCRIPTION HERE." >> "$PROJ"
+path="$TASKS/hello.sh"
+if ! touch "$path"; then fatal "Could not create File: $path"; fi
+echo "#!/bin/bash" > "$path"
+echo "" >> "$path"
+echo "# Run with: 'bashing run hello'" >> "$path"
+echo "" >> "$path" >> "$path"
+echo "echo \"Hello, World!\"" >> "$path"
+success "Successfully initialized '$INIT_PATH'."
+exit 0
+  return 0;
 }
 function cli_uberbash() {
-  TARGET_PATH="$PROJECT_ROOT/target"
-  TARGET_FILE="$TARGET_PATH/$ARTIFACT_ID-$ARTIFACT_VERSION.sh"
-  if ! mkdir -p "$TARGET_PATH" 2> /dev/null; then
-      error "Could not create target directory: $TARGET_PATH";
-      exit 1;
-  fi
-  echo "Creating $TARGET_FILE ..."
-  __run "compile" "--compact" -o "$TARGET_FILE"
-  if [[ "$?" != "0" ]]; then
-      error "An Error occured while running task 'compile'."
-      exit 1;
-  fi
-  success "Uberbash created successfully."
-  if [[ "$1" == "--compress" ]]; then
-      echo "Compressing $TARGET_FILE ..."
-      mv "$TARGET_FILE" "$TARGET_FILE.raw"
-      echo "#!/bin/bash" > "$TARGET_FILE"
-      echo 'tail -n +3 "$0" | gzip -d -n 2> /dev/null | bash -s "$@"; exit $?' >> "$TARGET_FILE"
-      gzip -c -n "$TARGET_FILE.raw" >> "$TARGET_FILE";
-      success "Uberbash (compressed) created successfully."
-      rm "$TARGET_FILE.raw"
-  fi
-  chmod +x "$TARGET_FILE" >& /dev/null
-  exit 0
+TARGET_PATH="$PROJECT_ROOT/target"
+TARGET_FILE="$TARGET_PATH/$ARTIFACT_ID-$ARTIFACT_VERSION.sh"
+if ! mkdir -p "$TARGET_PATH" 2> /dev/null; then
+    error "Could not create target directory: $TARGET_PATH";
+    exit 1;
+fi
+echo "Creating $TARGET_FILE ..."
+__run "compile" "--compact" -o "$TARGET_FILE"
+if [[ "$?" != "0" ]]; then
+    error "An Error occured while running task 'compile'."
+    exit 1;
+fi
+success "Uberbash created successfully."
+if [[ "$1" == "--compress" ]]; then
+    echo "Compressing $TARGET_FILE ..."
+    mv "$TARGET_FILE" "$TARGET_FILE.raw"
+    echo "#!/bin/bash" > "$TARGET_FILE"
+    echo 'tail -n +3 "$0" | gzip -d -n 2> /dev/null | bash -s "$@"; exit $?' >> "$TARGET_FILE"
+    gzip -c -n "$TARGET_FILE.raw" >> "$TARGET_FILE";
+    success "Uberbash (compressed) created successfully."
+    rm "$TARGET_FILE.raw"
+fi
+chmod +x "$TARGET_FILE" >& /dev/null
+exit 0
+  return 0;
 }
 function cli_version() {
-  echo "bashing $(yellow "$__VERSION") (bash $BASH_VERSION)"
+echo "bashing $(yellow "$__VERSION") (bash $BASH_VERSION)"
+  return 0;
 }
 function cli_compile() {
-  BUILD_HEADER="yes"
-  BUILD_METADATA="yes"
-  BUILD_LIBRARY="yes"
-  BUILD_CLI="yes"
-  BUILD_HELP="yes"
-  COMPACT="no"
-  OUTPUT_FILE=""
-  while [ $# -gt 0 ]; do
-      arg="$1"
-      case "$arg" in
-          "--out"|"-o") shift; OUTPUT_FILE="$1";;
-          "--compact") COMPACT="yes";;
-          "--no-metadata") BUILD_METADATA="no";;
-          "--no-lib") BUILD_LIBRARY="no";;
-          "--no-cli") BUILD_CLI="no";;
-          "--no-header") BUILD_HEADER="no";;
-          --*)
-              error "Invalid command line argument: $arg"
-              exit 1
-              ;;
-          *)
-              if [ -z "$PROJECT_ROOT" ]; then PROJECT_ROOT="$arg";
-              else error "Invalid command line argument: $arg"; exit 1; fi
-              ;;
-      esac
-      shift
-  done
-  if [ ! -z "$OUTPUT_FILE" ]; then
-      OUTPUT_FILE="$(cd $(dirname "$OUTPUT_FILE") && pwd)/$(basename "$OUTPUT_FILE")"
-      rm -f "$OUTPUT_FILE"
-      if ! touch "$OUTPUT_FILE" 2> /dev/null; then
-          error "Cannot write to given Output File: $OUTPUT_FILE.";
-          exit 1;
-      fi
-      export OUT="$OUTPUT_FILE"
-  fi
-  cd "$SRC_PATH"
-  if [[ "$BUILD_HEADER" == "yes" ]]; then generateHeader; fi
-  if [[ "$BUILD_METADATA" == "yes" ]]; then generateMetadata; fi
-  genInclude "init.sh"
-  if [[ "$BUILD_LIBRARY" == "yes" ]] && [ -d "$LIB_PATH" ]; then generateLibrary; fi
-  if [[ "$BUILD_CLI" == "yes" ]]; then 
-      genInclude "before-task.sh"
-      generateCli
-      genInclude "after-task.sh"
-  fi
-  genInclude "cleanup.sh"
-  if [[ "$BUILD_CLI" == "yes" ]]; then generateCliExit; fi
-  cd "$CWD"
+BUILD_HEADER="yes"
+BUILD_METADATA="yes"
+BUILD_LIBRARY="yes"
+BUILD_CLI="yes"
+BUILD_HELP="yes"
+COMPACT="no"
+OUTPUT_FILE=""
+while [ $# -gt 0 ]; do
+    arg="$1"
+    case "$arg" in
+        "--out"|"-o") shift; OUTPUT_FILE="$1";;
+        "--compact") COMPACT="yes";;
+        "--no-metadata") BUILD_METADATA="no";;
+        "--no-lib") BUILD_LIBRARY="no";;
+        "--no-cli") BUILD_CLI="no";;
+        "--no-header") BUILD_HEADER="no";;
+        --*)
+            error "Invalid command line argument: $arg"
+            exit 1
+            ;;
+        *)
+            if [ -z "$PROJECT_ROOT" ]; then PROJECT_ROOT="$arg";
+            else error "Invalid command line argument: $arg"; exit 1; fi
+            ;;
+    esac
+    shift
+done
+if [ ! -z "$OUTPUT_FILE" ]; then
+    OUTPUT_FILE="$(cd $(dirname "$OUTPUT_FILE") && pwd)/$(basename "$OUTPUT_FILE")"
+    rm -f "$OUTPUT_FILE"
+    if ! touch "$OUTPUT_FILE" 2> /dev/null; then
+        error "Cannot write to given Output File: $OUTPUT_FILE.";
+        exit 1;
+    fi
+    export OUT="$OUTPUT_FILE"
+fi
+cd "$SRC_PATH"
+if [[ "$BUILD_HEADER" == "yes" ]]; then generateHeader; fi
+if [[ "$BUILD_METADATA" == "yes" ]]; then generateMetadata; fi
+genInclude "init.sh"
+if [[ "$BUILD_LIBRARY" == "yes" ]] && [ -d "$LIB_PATH" ]; then generateLibrary; fi
+if [[ "$BUILD_CLI" == "yes" ]]; then 
+    genInclude "before-task.sh"
+    generateCli
+    genInclude "after-task.sh"
+fi
+genInclude "cleanup.sh"
+if [[ "$BUILD_CLI" == "yes" ]]; then generateCliExit; fi
+cd "$CWD"
+  return 0;
+}
+function cli_new_task() {
+task="$1"
+hidden="no"
+if [ "$task" == "--hidden" ]; then task="$2"; hidden="yes"; fi
+if [ -z "$task" ]; then fatal "Usage: new.task [--hidden] <Task>"; fi
+file="$(echo "$task" | tr '.' '/').sh"
+if [ "$hidden" == "yes" ]; then path="$HID_PATH/$file";
+else path="$CLI_PATH/$file"; fi
+if [ -e "$path" ]; then fatal "File does already exist: $path"; fi
+if ! touch "$path"; then fatal "Could not create File: $path"; fi
+echo "#!/bin/bash" > "$path"
+echo "" >> "$path"
+echo "# Run with: 'bashing run $task'" >> "$path"
+echo "" >> "$path" >> "$path"
+echo "echo \"Hello from Task '$task'\"" >> "$path"
+success "Created Task '$task'."
+  return 0;
 }
 function __run() {
   local pid=""
@@ -484,10 +506,11 @@ function __run() {
     "") __run "help"; return $?;;
     "run") cli_run "$@" & local pid="$!";;
     "clean") cli_clean "$@" & local pid="$!";;
-    "init") cli_init "$@" & local pid="$!";;
+    "new") cli_new "$@" & local pid="$!";;
     "uberbash") cli_uberbash "$@" & local pid="$!";;
     "version") cli_version "$@" & local pid="$!";;
     "compile") cli_compile "$@" & local pid="$!";;
+    "new.task") cli_new_task "$@" & local pid="$!";;
     "help")
       echo "Usage: $0 <command> [<parameters> ...]" 1>&2
       cat 1>&2 <<HELP
@@ -495,7 +518,7 @@ function __run() {
     clean     :  (no help available)
     compile   :  (no help available)
     help      :  display this help message
-    init      :  (no help available)
+    new       :  (no help available)
     run       :  (no help available)
     uberbash  :  (no help available)
     version   :  (no help available)
@@ -504,7 +527,7 @@ HELP
       status=0
       ;;
     "version")
-      echo "bashing 0.1.1 (bash $BASH_VERSION)"
+      echo "bashing 0.1.2 (bash $BASH_VERSION)"
       status=0
       ;;
     *) echo "Unknown Command: $cmd" 1>&2;;
