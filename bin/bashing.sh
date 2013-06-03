@@ -1,6 +1,6 @@
 #!/bin/bash
-export __BASHING_VERSION='0.1.0-alpha5'
-export __VERSION='0.1.0-alpha5'
+export __BASHING_VERSION='0.1.0-alpha6'
+export __VERSION='0.1.0-alpha6'
 export __ARTIFACT_ID='bashing'
 export __GROUP_ID='bashing'
 BASHING_ROOT=$(cd "$(dirname "$0")" && pwd)
@@ -25,6 +25,7 @@ PROJECT_FILE="$PROJECT_ROOT/$BASHING_PROJECT_FILE"
 SRC_PATH="$PROJECT_ROOT/src"
 CLI_PATH="$SRC_PATH/tasks"
 LIB_PATH="$SRC_PATH/lib"
+HID_PATH="$SRC_PATH/hidden-tasks"
 function print_out() {
     if [ -z "$OUT" ]; then
         echo "$@";
@@ -110,6 +111,11 @@ function collectCliScripts() {
         find "." -type f -name "*.sh"
         cd "$CWD"
     fi
+    if [ -d "$HID_PATH" ]; then
+        cd "$HID_PATH"
+        find "." -type f -name "*.sh"
+        cd "$CWD"
+    fi
 }
 function toFn() {
     local n="$1"
@@ -123,13 +129,20 @@ function includeCliFn() {
     local path="$1"
     local fnName=$(toFn "$path");
     local fullPath="$CLI_PATH/$path"
+    local hidden="no"
+    if [ -e "$fullPath" ] && [ -e "$HID_PATH/$path" ]; then
+        fatal "Task and hidden Task of the same name: $path"
+    else if [ -e "$HID_PATH/$path" ]; then
+        local fullPath="$HID_PATH/$path";
+        local hidden="yes"
+    fi; fi
     if [[ "$fnName" == "cli_help" ]] && [[ "$BUILD_HELP" == "yes" ]]; then
         echo "WARN: CLI Function 'help' ($fullPath) overwrite built-in help." 1>&2;
         echo "WARN: Supply '--no-help' if you want to create your own help function." 1>&2;
     fi
     if bash -n "$fullPath" 1> /dev/null; then
-        debug "Including Task    $path -> $fnName ..."
-        comment "./cli/${path:2}"
+        if [[ "$hidden" == "no" ]]; then debug "Including Task    $path -> $fnName ..."; comment "./tasks/${path:2}";
+        else debug "Including Task    $path -> $fnName (hidden) ..."; comment "./hidden-tasks/${path:2}"; fi
         print_out "function ${fnName}() {"
         includeBashFile "$fullPath" | sed 's/^/  /g' | redirect_out
         print_out "}"
@@ -171,23 +184,32 @@ function buildCliFooter() {
     print_out "}"
 }
 function buildHelpTable() {
+    local hlp="yes"
+    local vrs="yes"
     for path in $@; do
-        local argName=$(toCliArg "$path");
-        echo "$argName|:|(no help available)"
+        if [ ! -e "$HID_PATH/$path" ]; then
+            local argName=$(toCliArg "$path");
+            echo "$argName|:|(no help available)"
+            case "$argName" in
+                "help") local hlp="no";;
+                "version") local vrs="no";;
+            esac
+        fi
     done
+    if [ "$hlp" == "yes" ]; then echo "help|:|display this help message"; fi
+    if [ "$vrs" == "yes" ]; then echo "version|:|display version"; fi
 }
 function buildHelpFunction() {
     print_out '    "help")'
     print_out '      echo "Usage: $0 <command> [<parameters> ...]" 1>&2'
-    if [ ! -z "$@" ]; then
-        print_out '      cat 1>&2 <<HELP'
-        print_out ''
-        buildHelpTable "$@" | column -s "|" -t\
-            | sed 's/^/    /'\
-            | redirect_out
-        print_out ''
-        print_out 'HELP'
-    fi
+    print_out '      cat 1>&2 <<HELP'
+    print_out ''
+    buildHelpTable "$@" | column -s "|" -t\
+        | sort\
+        | sed 's/^/    /'\
+        | redirect_out
+    print_out ''
+    print_out 'HELP'
     print_out '      status=0'
     print_out '      ;;'
 }
@@ -475,16 +497,18 @@ function __run() {
       echo "Usage: $0 <command> [<parameters> ...]" 1>&2
       cat 1>&2 <<HELP
 
-    run       :  (no help available)
-    init      :  (no help available)
-    uberbash  :  (no help available)
     compile   :  (no help available)
+    help      :  display this help message
+    init      :  (no help available)
+    run       :  (no help available)
+    uberbash  :  (no help available)
+    version   :  display version
 
 HELP
       status=0
       ;;
     "version")
-      echo "bashing 0.1.0-alpha5 (bash $BASH_VERSION)"
+      echo "bashing 0.1.0-alpha6 (bash $BASH_VERSION)"
       status=0
       ;;
     *)

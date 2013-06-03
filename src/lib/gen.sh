@@ -73,6 +73,11 @@ function collectCliScripts() {
         find "." -type f -name "*.sh"
         cd "$CWD"
     fi
+    if [ -d "$HID_PATH" ]; then
+        cd "$HID_PATH"
+        find "." -type f -name "*.sh"
+        cd "$CWD"
+    fi
 }
 
 function toFn() {
@@ -89,6 +94,14 @@ function includeCliFn() {
     local path="$1"
     local fnName=$(toFn "$path");
     local fullPath="$CLI_PATH/$path"
+    local hidden="no"
+
+    if [ -e "$fullPath" ] && [ -e "$HID_PATH/$path" ]; then
+        fatal "Task and hidden Task of the same name: $path"
+    else if [ -e "$HID_PATH/$path" ]; then
+        local fullPath="$HID_PATH/$path";
+        local hidden="yes"
+    fi; fi
 
     # Checks
     if [[ "$fnName" == "cli_help" ]] && [[ "$BUILD_HELP" == "yes" ]]; then
@@ -98,8 +111,8 @@ function includeCliFn() {
 
     # Create
     if bash -n "$fullPath" 1> /dev/null; then
-        debug "Including Task    $path -> $fnName ..."
-        comment "./cli/${path:2}"
+        if [[ "$hidden" == "no" ]]; then debug "Including Task    $path -> $fnName ..."; comment "./tasks/${path:2}";
+        else debug "Including Task    $path -> $fnName (hidden) ..."; comment "./hidden-tasks/${path:2}"; fi
         print_out "function ${fnName}() {"
         includeBashFile "$fullPath" | sed 's/^/  /g' | redirect_out
         print_out "}"
@@ -146,24 +159,33 @@ function buildCliFooter() {
 }
 
 function buildHelpTable() {
+    local hlp="yes"
+    local vrs="yes"
     for path in $@; do
-        local argName=$(toCliArg "$path");
-        echo "$argName|:|(no help available)"
+        if [ ! -e "$HID_PATH/$path" ]; then
+            local argName=$(toCliArg "$path");
+            echo "$argName|:|(no help available)"
+            case "$argName" in
+                "help") local hlp="no";;
+                "version") local vrs="no";;
+            esac
+        fi
     done
+    if [ "$hlp" == "yes" ]; then echo "help|:|display this help message"; fi
+    if [ "$vrs" == "yes" ]; then echo "version|:|display version"; fi
 }
 
 function buildHelpFunction() {
     print_out '    "help")'
     print_out '      echo "Usage: $0 <command> [<parameters> ...]" 1>&2'
-    if [ ! -z "$@" ]; then
-        print_out '      cat 1>&2 <<HELP'
-        print_out ''
-        buildHelpTable "$@" | column -s "|" -t\
-            | sed 's/^/    /'\
-            | redirect_out
-        print_out ''
-        print_out 'HELP'
-    fi
+    print_out '      cat 1>&2 <<HELP'
+    print_out ''
+    buildHelpTable "$@" | column -s "|" -t\
+        | sort\
+        | sed 's/^/    /'\
+        | redirect_out
+    print_out ''
+    print_out 'HELP'
     print_out '      status=0'
     print_out '      ;;'
 }
