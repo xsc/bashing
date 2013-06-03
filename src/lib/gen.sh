@@ -238,7 +238,8 @@ function generateStandaloneTask() {
     genInclude "before-task.sh"
     print_out 'shift'
     print_out 'function __run() { echo "__run not available when running CLI task directly!" 1>&2; exit 1; }'
-    genInclude "cli/$task"
+    if [ -e "$CLI_PATH/$task" ]; then genInclude "tasks/$task";
+    else genInclude "hidden-tasks/$task"; fi
     genInclude "after-task.sh"
     genInclude "cleanup.sh"
 }

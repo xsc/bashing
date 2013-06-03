@@ -1,6 +1,6 @@
 #!/bin/bash
 export __BASHING_VERSION='0.1.0-alpha6'
-export __VERSION='0.1.0-alpha6'
+export __VERSION='0.1.0'
 export __ARTIFACT_ID='bashing'
 export __GROUP_ID='bashing'
 BASHING_ROOT=$(cd "$(dirname "$0")" && pwd)
@@ -9,7 +9,7 @@ BASHING_PROJECT_FILE="bashing.project"
 CWD=$(pwd)
 PROJECT_ROOT=$(pwd)
 case "$1" in
-    "compile"|"uberbash"|"run")
+    "compile"|"uberbash"|"run"|"clean")
         while [ -d "$PROJECT_ROOT" ]; do
             if [ -e "$PROJECT_ROOT/$BASHING_PROJECT_FILE" ]; then break; fi
             PROJECT_ROOT="$PROJECT_ROOT/.."
@@ -254,7 +254,8 @@ function generateStandaloneTask() {
     genInclude "before-task.sh"
     print_out 'shift'
     print_out 'function __run() { echo "__run not available when running CLI task directly!" 1>&2; exit 1; }'
-    genInclude "cli/$task"
+    if [ -e "$CLI_PATH/$task" ]; then genInclude "tasks/$task";
+    else genInclude "hidden-tasks/$task"; fi
     genInclude "after-task.sh"
     genInclude "cleanup.sh"
 }
@@ -356,6 +357,9 @@ function cli_run() {
   wait "$!"
   st="$?"
   exit "$st"
+}
+function cli_clean() {
+  rm -rf "$PROJECT_ROOT/target"
 }
 function cli_init() {
   ARTIFACT="$1"
@@ -481,6 +485,10 @@ function __run() {
       cli_run "$@" &
       local pid="$!"
       ;;
+    "clean")
+      cli_clean "$@" &
+      local pid="$!"
+      ;;
     "init")
       cli_init "$@" &
       local pid="$!"
@@ -497,6 +505,7 @@ function __run() {
       echo "Usage: $0 <command> [<parameters> ...]" 1>&2
       cat 1>&2 <<HELP
 
+    clean     :  (no help available)
     compile   :  (no help available)
     help      :  display this help message
     init      :  (no help available)
@@ -508,7 +517,7 @@ HELP
       status=0
       ;;
     "version")
-      echo "bashing 0.1.0-alpha6 (bash $BASH_VERSION)"
+      echo "bashing 0.1.0 (bash $BASH_VERSION)"
       status=0
       ;;
     *)

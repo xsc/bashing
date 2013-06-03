@@ -9,7 +9,7 @@ PROJECT_ROOT=$(pwd)
 # -------------------------------------------------------------------
 # Find Root
 case "$1" in
-    "compile"|"uberbash"|"run")
+    "compile"|"uberbash"|"run"|"clean")
         while [ -d "$PROJECT_ROOT" ]; do
             if [ -e "$PROJECT_ROOT/$BASHING_PROJECT_FILE" ]; then break; fi
             PROJECT_ROOT="$PROJECT_ROOT/.."
