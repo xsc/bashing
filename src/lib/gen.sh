@@ -114,7 +114,8 @@ function includeCliFn() {
         if [[ "$hidden" == "no" ]]; then debug "Including Task    $path -> $fnName ..."; comment "./tasks/${path:2}";
         else debug "Including Task    $path -> $fnName (hidden) ..."; comment "./hidden-tasks/${path:2}"; fi
         print_out "function ${fnName}() {"
-        includeBashFile "$fullPath" | sed 's/^/  /g' | redirect_out
+        includeBashFile "$fullPath" | redirect_out
+        print_out '  return 0;'
         print_out "}"
         return 0;
     fi
