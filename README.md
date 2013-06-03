@@ -16,6 +16,11 @@ chmod +x ~/.bin/bashing
 Make sure `~/.bin` is on your `$PATH`, e.g. by adding `export PATH="$PATH:~/.bin"` to your
 `.bashrc`.
 
+## Usage
+
+Have a look at the [wiki](https://github.com/xsc/bashing/wiki) and the 
+[Quickstart Tutorial](https://github.com/xsc/bashing/wiki/Quickstart-Tutorial).
+
 ## Bashing Bashing
 
 To build bashing, check out this repository and run:
