@@ -1,6 +1,6 @@
 #!/bin/bash
-export __BASHING_VERSION='0.1.0'
-export __VERSION='0.1.0'
+export __BASHING_VERSION='0.1.1'
+export __VERSION='0.1.1'
 export __ARTIFACT_ID='bashing'
 export __GROUP_ID='bashing'
 BASHING_ROOT=$(cd "$(dirname "$0")" && pwd)
@@ -408,8 +408,17 @@ function cli_uberbash() {
       error "An Error occured while running task 'compile'."
       exit 1;
   fi
-  chmod +x "$TARGET_FILE" >& /dev/null
   success "Uberbash created successfully."
+  if [[ "$1" == "--compress" ]]; then
+      echo "Compressing $TARGET_FILE ..."
+      mv "$TARGET_FILE" "$TARGET_FILE.raw"
+      echo "#!/bin/bash" > "$TARGET_FILE"
+      echo 'tail -n +3 "$0" | gzip -d -n 2> /dev/null | bash -s "$@"; exit $?' >> "$TARGET_FILE"
+      gzip -c -n "$TARGET_FILE.raw" >> "$TARGET_FILE";
+      success "Uberbash (compressed) created successfully."
+      rm "$TARGET_FILE.raw"
+  fi
+  chmod +x "$TARGET_FILE" >& /dev/null
   exit 0
 }
 function cli_version() {
@@ -495,7 +504,7 @@ HELP
       status=0
       ;;
     "version")
-      echo "bashing 0.1.0 (bash $BASH_VERSION)"
+      echo "bashing 0.1.1 (bash $BASH_VERSION)"
       status=0
       ;;
     *) echo "Unknown Command: $cmd" 1>&2;;

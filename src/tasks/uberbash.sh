@@ -16,6 +16,17 @@ if [[ "$?" != "0" ]]; then
     error "An Error occured while running task 'compile'."
     exit 1;
 fi
-chmod +x "$TARGET_FILE" >& /dev/null
 success "Uberbash created successfully."
+
+if [[ "$1" == "--compress" ]]; then
+    echo "Compressing $TARGET_FILE ..."
+    mv "$TARGET_FILE" "$TARGET_FILE.raw"
+    echo "#!/bin/bash" > "$TARGET_FILE"
+    echo 'tail -n +3 "$0" | gzip -d -n 2> /dev/null | bash -s "$@"; exit $?' >> "$TARGET_FILE"
+    gzip -c -n "$TARGET_FILE.raw" >> "$TARGET_FILE";
+    success "Uberbash (compressed) created successfully."
+    rm "$TARGET_FILE.raw"
+fi
+
+chmod +x "$TARGET_FILE" >& /dev/null
 exit 0
