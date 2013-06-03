@@ -12,10 +12,9 @@ fi
 
 # Derive Script Path
 SRC="$(echo "$CLI" | tr '.' '/').sh"
-if [ ! -e "$CLI_PATH/$SRC" ]; then
-    error "No such CLI File: $SRC"
-    exit 1
-fi
+path="$CLI_PATH/$SRC"
+if [ ! -e "$path" -a -e "$HID_PATH/$SRC" ]; then path="$HID_PATH/$SRC"; fi
+if [ ! -e "$path" ]; then fatal "No such Task: $CLI"; fi
 
 # Generate Script
 generateStandaloneTask "$SRC" | bash -s "$@" &

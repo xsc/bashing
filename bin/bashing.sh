@@ -1,6 +1,6 @@
 #!/bin/bash
-export __BASHING_VERSION='0.1.2'
-export __VERSION='0.1.2'
+export __BASHING_VERSION='0.1.3'
+export __VERSION='0.1.3'
 export __ARTIFACT_ID='bashing'
 export __GROUP_ID='bashing'
 BASHING_ROOT=$(cd "$(dirname "$0")" && pwd)
@@ -287,7 +287,7 @@ function artifactVersion() { artifactGet "$1" 4; }
 function artifactId() { artifactGet "$1" 3; }
 function artifactGroupId() { artifactGet "$1" 2; }
 function error() {
-    echo -n "$(red "(ERROR) ") " 1>&2
+    echo -n "$(red "(ERROR)") " 1>&2
     echo "$@" 1>&2
 }
 function fatal() {
@@ -342,10 +342,9 @@ if [ -z "$CLI" ]; then
     exit 1;
 fi
 SRC="$(echo "$CLI" | tr '.' '/').sh"
-if [ ! -e "$CLI_PATH/$SRC" ]; then
-    error "No such CLI File: $SRC"
-    exit 1
-fi
+path="$CLI_PATH/$SRC"
+if [ ! -e "$path" -a -e "$HID_PATH/$SRC" ]; then path="$HID_PATH/$SRC"; fi
+if [ ! -e "$path" ]; then fatal "No such Task: $CLI"; fi
 generateStandaloneTask "$SRC" | bash -s "$@" &
 wait "$!"
 st="$?"
@@ -527,7 +526,7 @@ HELP
       status=0
       ;;
     "version")
-      echo "bashing 0.1.2 (bash $BASH_VERSION)"
+      echo "bashing 0.1.3 (bash $BASH_VERSION)"
       status=0
       ;;
     *) echo "Unknown Command: $cmd" 1>&2;;
