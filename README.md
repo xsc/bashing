@@ -9,7 +9,7 @@ Current stable Version: __0.1.3__
 
 ```bash
 mkdir -p ~/.bin 
-curl -fkLo ~/.bin/bashing https://raw.github.com/xsc/bashing/stable/bin/bashing.sh
+curl -ko ~/.bin/bashing https://raw.github.com/xsc/bashing/stable/bin/bashing.sh
 chmod +x ~/.bin/bashing
 ```
 
@@ -19,7 +19,8 @@ Make sure `~/.bin` is on your `$PATH`, e.g. by adding `export PATH="$PATH:~/.bin
 ## Usage
 
 Have a look at the [wiki](https://github.com/xsc/bashing/wiki) and the 
-[Quickstart Tutorial](https://github.com/xsc/bashing/wiki/Quickstart-Tutorial).
+[Quickstart Tutorial](https://github.com/xsc/bashing/wiki/Quickstart-Tutorial). And if you want to examine
+a full-fledged Bashing project, why not [Bashing itself](https://github.com/xsc/bashing/tree/master/src)?
 
 ```bash
 $ bashing new greet
