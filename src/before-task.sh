@@ -12,7 +12,7 @@ while [ $# -gt 0 ]; do
             DEBUG="yes"
             shift
             ;;
-        "compile"|"uberbash"|"run")
+        "compile"|"uberbash"|"run"|"deploy"|"install")
             s=$(artifactString)
             GROUP_ID=$(artifactGroupId "$s")
             ARTIFACT_ID=$(artifactId "$s")

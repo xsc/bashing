@@ -154,7 +154,7 @@ function buildHelpTable() {
     local hlp="yes"
     local vrs="yes"
     for path in $@; do
-        if [ ! -e "$HID_PATH/$path" ]; then
+        if [ -e "$CLI_PATH/$path" ]; then
             local argName=$(toCliArg "$path");
             local helpText=$(getMeta "$CLI_PATH/$path" "help")
             if [ -z "$helpText" ]; then helpText="(no help available)"; fi
