@@ -9,7 +9,7 @@ Current stable Version: __0.1.3__
 
 ```bash
 mkdir -p ~/.bin 
-curl -ko ~/.bin/bashing https://raw.github.com/xsc/bashing/stable/bin/bashing.sh
+curl -ko ~/.bin/bashing https://raw.github.com/xsc/bashing/stable/bin/bashing
 chmod +x ~/.bin/bashing
 ```
 
@@ -56,7 +56,7 @@ greet 0.1.0-SNAPSHOT (bash 4.2.25(1)-release)
 To build bashing, check out this repository and run:
 
 ```
-$ ./bin/bashing.sh uberbash
+$ ./bin/bashing uberbash
 Creating /git/public/bashing/target/bashing-0.1.0-SNAPSHOT.sh ...
 Uberbash created successfully.
 ```

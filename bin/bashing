@@ -1,6 +1,6 @@
 #!/bin/bash
-export __BASHING_VERSION='0.1.3'
-export __VERSION='0.1.3'
+export __BASHING_VERSION='0.1.4'
+export __VERSION='0.1.4'
 export __ARTIFACT_ID='bashing'
 export __GROUP_ID='bashing'
 BASHING_ROOT=$(cd "$(dirname "$0")" && pwd)
@@ -26,6 +26,17 @@ SRC_PATH="$PROJECT_ROOT/src"
 CLI_PATH="$SRC_PATH/tasks"
 LIB_PATH="$SRC_PATH/lib"
 HID_PATH="$SRC_PATH/hidden-tasks"
+function getMeta() {
+    local path="$1"
+    local key="$2"
+    if  [ ! -s "$1" ]; then return 1; fi
+    sed '/^\s*$/d' "$path"\
+        | sed '/^\s*\([^#]\|#!\)/d'\
+        | sed 's/^\s*# \?//'\
+        | sed -n "/<$key>/,\$p"\
+        | sed -n "0,/<\/$key>/p"\
+        | sed "s/<\/\?$key>//g"
+}
 function print_out() {
     if [ -z "$OUT" ]; then
         echo "$@";
@@ -180,9 +191,11 @@ function buildHelpTable() {
     local hlp="yes"
     local vrs="yes"
     for path in $@; do
-        if [ ! -e "$HID_PATH/$path" ]; then
+        if [ -e "$CLI_PATH/$path" ]; then
             local argName=$(toCliArg "$path");
-            echo "$argName|:|(no help available)"
+            local helpText=$(getMeta "$CLI_PATH/$path" "help")
+            if [ -z "$helpText" ]; then helpText="(no help available)"; fi
+            echo "$argName|:|$helpText"
             case "$argName" in
                 "help") local hlp="no";;
                 "version") local vrs="no";;
@@ -194,7 +207,7 @@ function buildHelpTable() {
 }
 function buildHelpFunction() {
     print_out '    "help")'
-    print_out '      echo "Usage: $0 <command> [<parameters> ...]" 1>&2'
+    print_out "      echo \"Usage: $ARTIFACT_ID <task> [...]\" 1>&2"
     print_out '      cat 1>&2 <<HELP'
     print_out ''
     buildHelpTable "$@" | column -s "|" -t\
@@ -317,7 +330,7 @@ while [ $# -gt 0 ]; do
             DEBUG="yes"
             shift
             ;;
-        "compile"|"uberbash"|"run")
+        "compile"|"uberbash"|"run"|"deploy")
             s=$(artifactString)
             GROUP_ID=$(artifactGroupId "$s")
             ARTIFACT_ID=$(artifactId "$s")
@@ -398,6 +411,7 @@ exit 0
 function cli_uberbash() {
 TARGET_PATH="$PROJECT_ROOT/target"
 TARGET_FILE="$TARGET_PATH/$ARTIFACT_ID-$ARTIFACT_VERSION.sh"
+TARGET_FILE_COMPRESSED="$TARGET_PATH/$ARTIFACT_ID-$ARTIFACT_VERSION.gz.sh"
 if ! mkdir -p "$TARGET_PATH" 2> /dev/null; then
     error "Could not create target directory: $TARGET_PATH";
     exit 1;
@@ -409,21 +423,51 @@ if [[ "$?" != "0" ]]; then
     exit 1;
 fi
 success "Uberbash created successfully."
-if [[ "$1" == "--compress" ]]; then
-    echo "Compressing $TARGET_FILE ..."
-    mv "$TARGET_FILE" "$TARGET_FILE.raw"
-    echo "#!/bin/bash" > "$TARGET_FILE"
-    echo 'tail -n +3 "$0" | gzip -d -n 2> /dev/null | bash -s "$@"; exit $?' >> "$TARGET_FILE"
-    gzip -c -n "$TARGET_FILE.raw" >> "$TARGET_FILE";
-    success "Uberbash (compressed) created successfully."
-    rm "$TARGET_FILE.raw"
-fi
 chmod +x "$TARGET_FILE" >& /dev/null
+if [[ "$1" == "--compress" ]]; then
+    echo "Compressing into $TARGET_FILE_COMPRESSED ..."
+    echo "#!/bin/bash" > "$TARGET_FILE_COMPRESSED"
+    echo 'tail -n +3 "$0" | gzip -d -n 2> /dev/null | bash -s "$@"; exit $?' >> "$TARGET_FILE_COMPRESSED"
+    gzip -c -n "$TARGET_FILE" >> "$TARGET_FILE_COMPRESSED";
+    success "Uberbash (compressed) created successfully."
+    chmod +x "$TARGET_FILE_COMPRESSED" >& /dev/null
+fi
 exit 0
+  return 0;
+}
+function cli_deploy() {
+path="$1"
+if [ -z "$path" ]; then path="$PROJECT_ROOT/bin"; fi
+__run "uberbash"
+src="$PROJECT_ROOT/target/$ARTIFACT_ID-$ARTIFACT_VERSION.sh"
+if [ ! -s "$src" ]; then fatal "Could not find Uberbash."; fi
+dst="$path/$ARTIFACT_ID"
+if ! mkdir -p "$path"; then fatal "Could not create $path."; fi
+verbose -n "Deploying to $dst ..."
+cp "$src" "$dst" 2> /dev/null || fatal "Could not copy $src to $dst ...";
+success "OK."
   return 0;
 }
 function cli_version() {
 echo "bashing $(yellow "$__VERSION") (bash $BASH_VERSION)"
+  return 0;
+}
+function cli_new_task() {
+task="$1"
+hidden="no"
+if [ "$task" == "--hidden" ]; then task="$2"; hidden="yes"; fi
+if [ -z "$task" ]; then fatal "Usage: new.task [--hidden] <Task>"; fi
+file="$(echo "$task" | tr '.' '/').sh"
+if [ "$hidden" == "yes" ]; then path="$HID_PATH/$file";
+else path="$CLI_PATH/$file"; fi
+if [ -e "$path" ]; then fatal "File does already exist: $path"; fi
+if ! touch "$path"; then fatal "Could not create File: $path"; fi
+echo "#!/bin/bash" > "$path"
+echo "" >> "$path"
+echo "# Run with: 'bashing run $task'" >> "$path"
+echo "" >> "$path" >> "$path"
+echo "echo \"Hello from Task '$task'\"" >> "$path"
+success "Created Task '$task'."
   return 0;
 }
 function cli_compile() {
@@ -478,24 +522,6 @@ if [[ "$BUILD_CLI" == "yes" ]]; then generateCliExit; fi
 cd "$CWD"
   return 0;
 }
-function cli_new_task() {
-task="$1"
-hidden="no"
-if [ "$task" == "--hidden" ]; then task="$2"; hidden="yes"; fi
-if [ -z "$task" ]; then fatal "Usage: new.task [--hidden] <Task>"; fi
-file="$(echo "$task" | tr '.' '/').sh"
-if [ "$hidden" == "yes" ]; then path="$HID_PATH/$file";
-else path="$CLI_PATH/$file"; fi
-if [ -e "$path" ]; then fatal "File does already exist: $path"; fi
-if ! touch "$path"; then fatal "Could not create File: $path"; fi
-echo "#!/bin/bash" > "$path"
-echo "" >> "$path"
-echo "# Run with: 'bashing run $task'" >> "$path"
-echo "" >> "$path" >> "$path"
-echo "echo \"Hello from Task '$task'\"" >> "$path"
-success "Created Task '$task'."
-  return 0;
-}
 function __run() {
   local pid=""
   local status=255
@@ -507,26 +533,27 @@ function __run() {
     "clean") cli_clean "$@" & local pid="$!";;
     "new") cli_new "$@" & local pid="$!";;
     "uberbash") cli_uberbash "$@" & local pid="$!";;
+    "deploy") cli_deploy "$@" & local pid="$!";;
     "version") cli_version "$@" & local pid="$!";;
-    "compile") cli_compile "$@" & local pid="$!";;
     "new.task") cli_new_task "$@" & local pid="$!";;
+    "compile") cli_compile "$@" & local pid="$!";;
     "help")
-      echo "Usage: $0 <command> [<parameters> ...]" 1>&2
+      echo "Usage: bashing <task> [...]" 1>&2
       cat 1>&2 <<HELP
 
-    clean     :  (no help available)
-    compile   :  (no help available)
+    clean     :  remove build results and cached data
+    deploy    :  create uberbash and copy to deploy path
     help      :  display this help message
-    new       :  (no help available)
-    run       :  (no help available)
-    uberbash  :  (no help available)
-    version   :  (no help available)
+    new       :  initialize directories for a bashing project
+    run       :  run task in the projects context
+    uberbash  :  create standalone bash script
+    version   :  display version
 
 HELP
       status=0
       ;;
     "version")
-      echo "bashing 0.1.3 (bash $BASH_VERSION)"
+      echo "bashing 0.1.4 (bash $BASH_VERSION)"
       status=0
       ;;
     *) echo "Unknown Command: $cmd" 1>&2;;
