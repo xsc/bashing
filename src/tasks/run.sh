@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#!require gen
+# <help>run task in the projects context</help>
 
 # Run CLI script in context of Library, Setup and Shutdown.
 

@@ -1,8 +1,6 @@
 #!/bin/bash
 
-#!require log
-
-# Initialize Directories for a Bashing Project
+# <help>initialize directories for a bashing project</help>
 
 # ----------------------------------------------------------
 # Parameters

@@ -156,7 +156,9 @@ function buildHelpTable() {
     for path in $@; do
         if [ ! -e "$HID_PATH/$path" ]; then
             local argName=$(toCliArg "$path");
-            echo "$argName|:|(no help available)"
+            local helpText=$(getMeta "$CLI_PATH/$path" "help")
+            if [ -z "$helpText" ]; then helpText="(no help available)"; fi
+            echo "$argName|:|$helpText"
             case "$argName" in
                 "help") local hlp="no";;
                 "version") local vrs="no";;
@@ -169,7 +171,7 @@ function buildHelpTable() {
 
 function buildHelpFunction() {
     print_out '    "help")'
-    print_out '      echo "Usage: $0 <command> [<parameters> ...]" 1>&2'
+    print_out "      echo \"Usage: $ARTIFACT_ID <task> [...]\" 1>&2"
     print_out '      cat 1>&2 <<HELP'
     print_out ''
     buildHelpTable "$@" | column -s "|" -t\

@@ -1,9 +1,10 @@
 #!/bin/bash
 
-# Build a Bashing Project by automatically selecting the output path and filename.
+# <help>create standalone bash script</help>
 
 TARGET_PATH="$PROJECT_ROOT/target"
 TARGET_FILE="$TARGET_PATH/$ARTIFACT_ID-$ARTIFACT_VERSION.sh"
+TARGET_FILE_COMPRESSED="$TARGET_PATH/$ARTIFACT_ID-$ARTIFACT_VERSION.gz.sh"
 
 if ! mkdir -p "$TARGET_PATH" 2> /dev/null; then
     error "Could not create target directory: $TARGET_PATH";
@@ -17,16 +18,14 @@ if [[ "$?" != "0" ]]; then
     exit 1;
 fi
 success "Uberbash created successfully."
+chmod +x "$TARGET_FILE" >& /dev/null
 
 if [[ "$1" == "--compress" ]]; then
-    echo "Compressing $TARGET_FILE ..."
-    mv "$TARGET_FILE" "$TARGET_FILE.raw"
-    echo "#!/bin/bash" > "$TARGET_FILE"
-    echo 'tail -n +3 "$0" | gzip -d -n 2> /dev/null | bash -s "$@"; exit $?' >> "$TARGET_FILE"
-    gzip -c -n "$TARGET_FILE.raw" >> "$TARGET_FILE";
+    echo "Compressing into $TARGET_FILE_COMPRESSED ..."
+    echo "#!/bin/bash" > "$TARGET_FILE_COMPRESSED"
+    echo 'tail -n +3 "$0" | gzip -d -n 2> /dev/null | bash -s "$@"; exit $?' >> "$TARGET_FILE_COMPRESSED"
+    gzip -c -n "$TARGET_FILE" >> "$TARGET_FILE_COMPRESSED";
     success "Uberbash (compressed) created successfully."
-    rm "$TARGET_FILE.raw"
+    chmod +x "$TARGET_FILE_COMPRESSED" >& /dev/null
 fi
-
-chmod +x "$TARGET_FILE" >& /dev/null
 exit 0
