@@ -49,6 +49,15 @@ Hello from Task 'hi'
 
 $ ./target/greet-0.1.0-SNAPSHOT.sh version
 greet 0.1.0-SNAPSHOT (bash 4.2.25(1)-release)
+
+$ bashing install
+Creating /git/public/shell/greet/target/greet-0.1.0-SNAPSHOT.sh ...
+Uberbash created successfully.
+Deploying to /home/yannick/.bin/greet ...
+Deployed successfully.
+
+$ greet version
+greet 0.1.0-SNAPSHOT (bash 4.2.25(1)-release)
 ```
 
 ## Bashing Bashing
