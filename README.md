@@ -9,7 +9,7 @@ Current stable Version: __0.1.3__
 
 ```bash
 mkdir -p ~/.bin 
-curl -fkLo ~/.bin/bashing https://raw.github.com/xsc/bashing/stable/bin/bashing.sh
+curl -ko ~/.bin/bashing https://raw.github.com/xsc/bashing/stable/bin/bashing.sh
 chmod +x ~/.bin/bashing
 ```
 
