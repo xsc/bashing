@@ -68,6 +68,15 @@ function includeBashFile() {
         sed '/^\s*#.*$/d' "$1" | sed '/^\s*$/d';
     fi
 }
+RX_ID='[a-zA-Z][a-zA-Z0-9_-]*'
+RX_INT='\(0\|[1-9][0-9]*\)'
+RX_VERSION="$RX_INT\\.$RX_INT\\.$RX_INT\(-$RX_ID\\)\\?"
+RX_ARTIFACT_STRING="^\\s*\\(\\($RX_ID\\)\\/\\)\\?\\($RX_ID\\)\\s\\+\\($RX_VERSION\\)\\s*$"
+function artifactString() { head -n 1 "$PROJECT_FILE"; }
+function artifactGet() { echo "$1" | sed -n "s/$RX_ARTIFACT_STRING/\\$2/p"; }
+function artifactVersion() { artifactGet "$1" 4; }
+function artifactId() { artifactGet "$1" 3; }
+function artifactGroupId() { artifactGet "$1" 2; }
 function generateHeader() {
     print_out "#!/bin/bash"
     sep
@@ -265,6 +274,28 @@ function generateStandaloneTask() {
     genInclude "after-task.sh"
     genInclude "cleanup.sh"
 }
+function error() {
+    echo -n "$(red "(ERROR)") " 1>&2
+    echo "$@" 1>&2
+}
+function fatal() {
+    error "$@";
+    exit 1;
+}
+function success() {
+    echo "$(green "$@")"
+}
+function verbose() {
+    if [[ "$VERBOSE" != "no" ]] || [ -z "$VERBOSE" ]; then
+        echo "$@" 
+    fi
+}
+function debug() {
+    if [[ "$DEBUG" == "yes" ]]; then
+        echo -n "$(yellow "(DEBUG)  ")";
+        echo "$@";
+    fi
+}
 RED="`tput setaf 1`"
 GREEN="`tput setaf 2`"
 YELLOW="`tput setaf 3`"
@@ -290,37 +321,6 @@ function blue() { colorize "${BLUE}" "${@}"; }
 function magenta() { colorize "${MAGENTA}" "${@}"; }
 function cyan() { colorize "${CYAN}" "${@}"; }
 function white() { colorize "${WHITE}" "${@}"; }
-RX_ID='[a-zA-Z][a-zA-Z0-9_-]*'
-RX_INT='\(0\|[1-9][0-9]*\)'
-RX_VERSION="$RX_INT\\.$RX_INT\\.$RX_INT\(-$RX_ID\\)\\?"
-RX_ARTIFACT_STRING="^\\s*\\(\\($RX_ID\\)\\/\\)\\?\\($RX_ID\\)\\s\\+\\($RX_VERSION\\)\\s*$"
-function artifactString() { head -n 1 "$PROJECT_FILE"; }
-function artifactGet() { echo "$1" | sed -n "s/$RX_ARTIFACT_STRING/\\$2/p"; }
-function artifactVersion() { artifactGet "$1" 4; }
-function artifactId() { artifactGet "$1" 3; }
-function artifactGroupId() { artifactGet "$1" 2; }
-function error() {
-    echo -n "$(red "(ERROR)") " 1>&2
-    echo "$@" 1>&2
-}
-function fatal() {
-    error "$@";
-    exit 1;
-}
-function success() {
-    echo "$(green "$@")"
-}
-function verbose() {
-    if [[ "$VERBOSE" != "no" ]] || [ -z "$VERBOSE" ]; then
-        echo "$@" 
-    fi
-}
-function debug() {
-    if [[ "$DEBUG" == "yes" ]]; then
-        echo -n "$(yellow "(DEBUG)  ")";
-        echo "$@";
-    fi
-}
 GROUP_ID=""
 ARTIFACT_ID=""
 ARTIFACT_VERSION=""
@@ -330,7 +330,7 @@ while [ $# -gt 0 ]; do
             DEBUG="yes"
             shift
             ;;
-        "compile"|"uberbash"|"run"|"deploy")
+        "compile"|"uberbash"|"run"|"deploy"|"install")
             s=$(artifactString)
             GROUP_ID=$(artifactGroupId "$s")
             ARTIFACT_ID=$(artifactId "$s")
@@ -348,24 +348,12 @@ while [ $# -gt 0 ]; do
         *) break;;
     esac
 done
-function cli_run() {
-CLI="$1"
-if [ -z "$CLI" ]; then
-    error "Usage: run <CLI Command> <Parameters>"
-    exit 1;
-fi
-SRC="$(echo "$CLI" | tr '.' '/').sh"
-path="$CLI_PATH/$SRC"
-if [ ! -e "$path" -a -e "$HID_PATH/$SRC" ]; then path="$HID_PATH/$SRC"; fi
-if [ ! -e "$path" ]; then fatal "No such Task: $CLI"; fi
-generateStandaloneTask "$SRC" | bash -s "$@" &
-wait "$!"
-st="$?"
-exit "$st"
-  return 0;
-}
 function cli_clean() {
 rm -rf "$PROJECT_ROOT/target"
+  return 0;
+}
+function cli_install() {
+__run "deploy" "$HOME/.bin"
   return 0;
 }
 function cli_new() {
@@ -408,6 +396,26 @@ success "Successfully initialized '$INIT_PATH'."
 exit 0
   return 0;
 }
+function cli_version() {
+echo "bashing $(yellow "$__VERSION") (bash $BASH_VERSION)"
+  return 0;
+}
+function cli_run() {
+CLI="$1"
+if [ -z "$CLI" ]; then
+    error "Usage: run <CLI Command> <Parameters>"
+    exit 1;
+fi
+SRC="$(echo "$CLI" | tr '.' '/').sh"
+path="$CLI_PATH/$SRC"
+if [ ! -e "$path" -a -e "$HID_PATH/$SRC" ]; then path="$HID_PATH/$SRC"; fi
+if [ ! -e "$path" ]; then fatal "No such Task: $CLI"; fi
+generateStandaloneTask "$SRC" | bash -s "$@" &
+wait "$!"
+st="$?"
+exit "$st"
+  return 0;
+}
 function cli_uberbash() {
 TARGET_PATH="$PROJECT_ROOT/target"
 TARGET_FILE="$TARGET_PATH/$ARTIFACT_ID-$ARTIFACT_VERSION.sh"
@@ -433,41 +441,6 @@ if [[ "$1" == "--compress" ]]; then
     chmod +x "$TARGET_FILE_COMPRESSED" >& /dev/null
 fi
 exit 0
-  return 0;
-}
-function cli_deploy() {
-path="$1"
-if [ -z "$path" ]; then path="$PROJECT_ROOT/bin"; fi
-__run "uberbash"
-src="$PROJECT_ROOT/target/$ARTIFACT_ID-$ARTIFACT_VERSION.sh"
-if [ ! -s "$src" ]; then fatal "Could not find Uberbash."; fi
-dst="$path/$ARTIFACT_ID"
-if ! mkdir -p "$path"; then fatal "Could not create $path."; fi
-verbose -n "Deploying to $dst ..."
-cp "$src" "$dst" 2> /dev/null || fatal "Could not copy $src to $dst ...";
-success "OK."
-  return 0;
-}
-function cli_version() {
-echo "bashing $(yellow "$__VERSION") (bash $BASH_VERSION)"
-  return 0;
-}
-function cli_new_task() {
-task="$1"
-hidden="no"
-if [ "$task" == "--hidden" ]; then task="$2"; hidden="yes"; fi
-if [ -z "$task" ]; then fatal "Usage: new.task [--hidden] <Task>"; fi
-file="$(echo "$task" | tr '.' '/').sh"
-if [ "$hidden" == "yes" ]; then path="$HID_PATH/$file";
-else path="$CLI_PATH/$file"; fi
-if [ -e "$path" ]; then fatal "File does already exist: $path"; fi
-if ! touch "$path"; then fatal "Could not create File: $path"; fi
-echo "#!/bin/bash" > "$path"
-echo "" >> "$path"
-echo "# Run with: 'bashing run $task'" >> "$path"
-echo "" >> "$path" >> "$path"
-echo "echo \"Hello from Task '$task'\"" >> "$path"
-success "Created Task '$task'."
   return 0;
 }
 function cli_compile() {
@@ -522,6 +495,37 @@ if [[ "$BUILD_CLI" == "yes" ]]; then generateCliExit; fi
 cd "$CWD"
   return 0;
 }
+function cli_new_task() {
+task="$1"
+hidden="no"
+if [ "$task" == "--hidden" ]; then task="$2"; hidden="yes"; fi
+if [ -z "$task" ]; then fatal "Usage: new.task [--hidden] <Task>"; fi
+file="$(echo "$task" | tr '.' '/').sh"
+if [ "$hidden" == "yes" ]; then path="$HID_PATH/$file";
+else path="$CLI_PATH/$file"; fi
+if [ -e "$path" ]; then fatal "File does already exist: $path"; fi
+if ! touch "$path"; then fatal "Could not create File: $path"; fi
+echo "#!/bin/bash" > "$path"
+echo "" >> "$path"
+echo "# Run with: 'bashing run $task'" >> "$path"
+echo "" >> "$path" >> "$path"
+echo "echo \"Hello from Task '$task'\"" >> "$path"
+success "Created Task '$task'."
+  return 0;
+}
+function cli_deploy() {
+path="$1"
+if [ -z "$path" ]; then path="$PROJECT_ROOT/bin"; fi
+__run "uberbash"
+src="$PROJECT_ROOT/target/$ARTIFACT_ID-$ARTIFACT_VERSION.sh"
+if [ ! -s "$src" ]; then fatal "Could not find Uberbash."; fi
+dst="$path/$ARTIFACT_ID"
+if ! mkdir -p "$path"; then fatal "Could not create $path."; fi
+verbose "Deploying to $dst ..."
+cp "$src" "$dst" 2> /dev/null || fatal "Could not copy $src to $dst ...";
+success "Deployed successfully."
+  return 0;
+}
 function __run() {
   local pid=""
   local status=255
@@ -529,21 +533,22 @@ function __run() {
   shift
   case "$cmd" in
     "") __run "help"; return $?;;
-    "run") cli_run "$@" & local pid="$!";;
     "clean") cli_clean "$@" & local pid="$!";;
+    "install") cli_install "$@" & local pid="$!";;
     "new") cli_new "$@" & local pid="$!";;
-    "uberbash") cli_uberbash "$@" & local pid="$!";;
-    "deploy") cli_deploy "$@" & local pid="$!";;
     "version") cli_version "$@" & local pid="$!";;
-    "new.task") cli_new_task "$@" & local pid="$!";;
+    "run") cli_run "$@" & local pid="$!";;
+    "uberbash") cli_uberbash "$@" & local pid="$!";;
     "compile") cli_compile "$@" & local pid="$!";;
+    "new.task") cli_new_task "$@" & local pid="$!";;
+    "deploy") cli_deploy "$@" & local pid="$!";;
     "help")
       echo "Usage: bashing <task> [...]" 1>&2
       cat 1>&2 <<HELP
 
     clean     :  remove build results and cached data
-    deploy    :  create uberbash and copy to deploy path
     help      :  display this help message
+    install   :  deploy uberbash at \$HOME/.bin
     new       :  initialize directories for a bashing project
     run       :  run task in the projects context
     uberbash  :  create standalone bash script
