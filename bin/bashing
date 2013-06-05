@@ -1,6 +1,6 @@
 #!/bin/bash
 export __BASHING_VERSION='0.1.4'
-export __VERSION='0.1.4'
+export __VERSION='0.1.5'
 export __ARTIFACT_ID='bashing'
 export __GROUP_ID='bashing'
 BASHING_ROOT=$(cd "$(dirname "$0")" && pwd)
@@ -558,7 +558,7 @@ HELP
       status=0
       ;;
     "version")
-      echo "bashing 0.1.4 (bash $BASH_VERSION)"
+      echo "bashing 0.1.5 (bash $BASH_VERSION)"
       status=0
       ;;
     *) echo "Unknown Command: $cmd" 1>&2;;
