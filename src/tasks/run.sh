@@ -20,4 +20,5 @@ if [ ! -e "$path" ]; then fatal "No such Task: $CLI"; fi
 generateStandaloneTask "$SRC" | bash -s "$@" &
 wait "$!"
 st="$?"
+debug "Task exitted with status $st."
 exit "$st"
