@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# <help>run task in the projects context</help>
+# <help>run task in the project's context</help>
 
 # Run CLI script in context of Library, Setup and Shutdown.
 
