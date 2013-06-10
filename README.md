@@ -74,4 +74,6 @@ This will create a standalone bashing script using ... wait for it ... bashing i
 
 ## License 
 
+Copyright &copy; 2013 Yannick Scherer
+
 Bashing is distributed under the MIT License.
