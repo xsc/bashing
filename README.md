@@ -70,7 +70,7 @@ Creating /git/public/bashing/target/bashing-0.1.0-SNAPSHOT.sh ...
 Uberbash created successfully.
 ```
 
-This will create a standalone bashing script using ... wait for it ... bashing itself!
+This will create a standalone bashing script using bashing itself!
 
 ## License 
 
