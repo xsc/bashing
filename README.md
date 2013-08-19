@@ -3,7 +3,7 @@
 __bashing__ is a small tool that let's you create single-file [Bash](http://www.gnu.org/software/bash/)
 tools in a multi-file way.
 
-Current stable Version: __0.1.6__
+Current stable Version: __0.1.7__
 
 ## Installation
 
