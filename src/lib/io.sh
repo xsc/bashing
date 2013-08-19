@@ -38,7 +38,11 @@ function nl() {
 # This always writes to stdout
 function includeBashFile() {
     if [ -s "$1" ] && bash -n "$1"; then
-        if [[ "$COMPACT" != "yes" ]]; then echo "# $1"; fi; 
-        sed '/^\s*#.*$/d' "$1" | sed '/^\s*$/d';
+        if [[ "$COMPACT" == "yes" ]]; then
+            sed '/^\s*#.*$/d' "$1" | sed '/^\s*$/d';
+        else
+            echo "# $1";
+            sed '/^\s*#.*$/d' "$1";
+        fi;
     fi
 }
