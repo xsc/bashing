@@ -208,7 +208,13 @@ function generateCli() {
     if [[ "$BUILD_HELP" == "yes" ]]; then buildHelpFunction "$cliScripts"; fi
     buildVersionFunction
     buildCliFooter
-    print_out "__run \"\$@\""
+
+    if [ -e "$SRC_PATH/main.sh" ]; then
+        genInclude "main.sh";
+    else
+        print_out "__run \"\$@\""
+    fi;
+
     print_out 'export __STATUS="$?"'
     sep
     cd "$CWD";
