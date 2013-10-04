@@ -135,8 +135,8 @@ function buildCliHeader() {
     print_out "function __run() {"
     print_out '  local pid=""'
     print_out '  local status=255'
-    print_out '  local cmd="$1"'
     genInclude "before-task.sh"
+    print_out '  local cmd="$1"'
     print_out '  shift'
     print_out '  case "$cmd" in'
     print_out '    "") __run "help"; return $?;;'
