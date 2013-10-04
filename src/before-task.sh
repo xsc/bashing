@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Generate Config Dir
+mkdir -p "$SETTINGS_DIR" 2> /dev/null || fatal "Could not initialize directory: $SETTINGS_DIR";
+
+# Dev Paths
+PROJECT_FILE="$PROJECT_ROOT/$BASHING_PROJECT_FILE"
+SRC_PATH="$PROJECT_ROOT/src"
+CLI_PATH="$SRC_PATH/tasks"
+LIB_PATH="$SRC_PATH/lib"
+HID_PATH="$SRC_PATH/hidden-tasks"
+
 # Read Project File
 
 GROUP_ID=""

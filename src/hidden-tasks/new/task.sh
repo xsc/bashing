@@ -10,8 +10,10 @@ if [ -z "$task" ]; then fatal "Usage: new.task [--hidden] <Task>"; fi
 file="$(echo "$task" | tr '.' '/').sh"
 if [ "$hidden" == "yes" ]; then path="$HID_PATH/$file";
 else path="$CLI_PATH/$file"; fi
+dir="$(dirname "$path")"
 
 # Create
+if ! mkdir -p "$dir"; then fatal "Could not create Directory: $dir"; fi
 if [ -e "$path" ]; then fatal "File does already exist: $path"; fi
 if ! touch "$path"; then fatal "Could not create File: $path"; fi
 

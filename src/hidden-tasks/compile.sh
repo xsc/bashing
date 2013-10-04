@@ -55,11 +55,7 @@ if [[ "$BUILD_HEADER" == "yes" ]]; then generateHeader; fi
 if [[ "$BUILD_METADATA" == "yes" ]]; then generateMetadata; fi
 genInclude "init.sh"
 if [[ "$BUILD_LIBRARY" == "yes" ]] && [ -d "$LIB_PATH" ]; then generateLibrary; fi
-if [[ "$BUILD_CLI" == "yes" ]]; then 
-    genInclude "before-task.sh"
-    generateCli
-    genInclude "after-task.sh"
-fi
+if [[ "$BUILD_CLI" == "yes" ]]; then generateCli; fi
 genInclude "cleanup.sh"
 if [[ "$BUILD_CLI" == "yes" ]]; then generateCliExit; fi
 cd "$CWD"

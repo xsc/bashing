@@ -136,6 +136,7 @@ function buildCliHeader() {
     print_out '  local pid=""'
     print_out '  local status=255'
     print_out '  local cmd="$1"'
+    genInclude "before-task.sh"
     print_out '  shift'
     print_out '  case "$cmd" in'
     print_out '    "") __run "help"; return $?;;'
@@ -148,6 +149,7 @@ function buildCliFooter() {
     print_out '      wait "$pid"'
     print_out '      local status=$?'
     print_out '  fi'
+    genInclude "after-task.sh"
     print_out '  return $status'
     print_out "}"
 }

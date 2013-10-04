@@ -5,6 +5,7 @@
 path="$1"
 if [ -z "$path" ]; then path="$PROJECT_ROOT/bin"; fi
 
+set -e
 __run "uberbash"
 
 src="$PROJECT_ROOT/target/$ARTIFACT_ID-$ARTIFACT_VERSION.sh"

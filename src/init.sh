@@ -5,6 +5,8 @@ BASHING_VERSION="$__VERSION"
 BASHING_PROJECT_FILE="bashing.project"
 CWD=$(pwd)
 PROJECT_ROOT=$(pwd)
+SETTINGS_DIR="$HOME/.bashing"
+SETTINGS="$SETTINGS_DIR/config"
 
 # -------------------------------------------------------------------
 # Find Root
@@ -23,10 +25,3 @@ case "$1" in
         PROJECT_ROOT=$(cd "$PROJECT_ROOT" && pwd);
     ;;
 esac
-PROJECT_FILE="$PROJECT_ROOT/$BASHING_PROJECT_FILE"
-
-# Derive Paths
-SRC_PATH="$PROJECT_ROOT/src"
-CLI_PATH="$SRC_PATH/tasks"
-LIB_PATH="$SRC_PATH/lib"
-HID_PATH="$SRC_PATH/hidden-tasks"
