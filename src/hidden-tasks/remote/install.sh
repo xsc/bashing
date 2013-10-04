@@ -17,7 +17,7 @@ mkdir -p "$REPO_DIR" 2> /dev/null || fatal "Could not initialize Remote Applicat
 APP="$REPO_DIR/$name"
 which git >& /dev/null || fatal "Missing dependency: git"
 
-verbose "Fetching bashing Project ..."
+verbose "Fetching bashing Project ($APP) ..."
 if [ -d "$APP" ]; then
     cd "$APP";
     git pull
