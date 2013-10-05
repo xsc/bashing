@@ -38,11 +38,18 @@ function nl() {
 # This always writes to stdout
 function includeBashFile() {
     if [ -s "$1" ] && bash -n "$1"; then
-        if [[ "$COMPACT" == "yes" ]]; then
+        if [[ "$PLAIN" == "yes" ]]; then
+            cat "$1";
+        else if [[ "$COMPACT" == "yes" ]]; then
             sed '/^\s*#.*$/d' "$1" | sed '/^\s*$/d';
         else
             echo "# $1";
             sed '/^\s*#.*$/d' "$1";
-        fi;
+        fi; fi;
     fi
+}
+
+function includeBashFileIndent() {
+    local indent="$2"
+    includeBashFile "$1" | sed "s/^/$indent/"
 }

@@ -7,7 +7,7 @@
 # ------------------------------------------------------------
 # Header
 function generateHeader() {
-    print_out "#!/bin/bash"
+    print_out "#!/bin/bash" 
     sep
     print_out "# $(head -c 45 /dev/zero | tr '\0' '-')"; 
     print_out "# Artifact:     $GROUP_ID/$ARTIFACT_ID"
@@ -34,7 +34,13 @@ function genInclude() {
     if [ -s "$SRC_PATH/$1" ]; then
         cd "$SRC_PATH"
         debug "Including File    ./$1 ..."
-        includeBashFile "./$1" | redirect_out
+        local plain=$(getMeta "./$1" "plain")
+        if [[ "$plain" == "true" ]]; then
+            export PLAIN="yes"
+            includeBashFile "./$1" | redirect_out
+        else 
+            includeBashFileIndent "./$1" "$2" | redirect_out
+        fi
         sep
         cd "$CWD"
     fi
@@ -116,7 +122,7 @@ function includeCliFn() {
         if [[ "$hidden" == "no" ]]; then debug "Including Task    $path -> $fnName ..."; comment "./tasks/${path:2}";
         else debug "Including Task    $path -> $fnName (hidden) ..."; comment "./hidden-tasks/${path:2}"; fi
         print_out "function ${fnName}() {"
-        includeBashFile "$fullPath" | redirect_out
+        includeBashFileIndent "$fullPath" "  " | redirect_out
         print_out '  return 0;'
         print_out "}"
         return 0;
@@ -135,7 +141,7 @@ function buildCliHeader() {
     print_out "function __run() {"
     print_out '  local pid=""'
     print_out '  local status=255'
-    genInclude "before-task.sh"
+    genInclude "before-task.sh" "  "
     print_out '  local cmd="$1"'
     print_out '  shift'
     print_out '  case "$cmd" in'
@@ -149,7 +155,7 @@ function buildCliFooter() {
     print_out '      wait "$pid"'
     print_out '      local status=$?'
     print_out '  fi'
-    genInclude "after-task.sh"
+    genInclude "after-task.sh" "  "
     print_out '  return $status'
     print_out "}"
 }
