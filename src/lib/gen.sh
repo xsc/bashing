@@ -34,13 +34,7 @@ function genInclude() {
     if [ -s "$SRC_PATH/$1" ]; then
         cd "$SRC_PATH"
         debug "Including File    ./$1 ..."
-        local plain=$(getMeta "./$1" "plain")
-        if [[ "$plain" == "true" ]]; then
-            export PLAIN="yes"
-            includeBashFile "./$1" | redirect_out
-        else 
-            includeBashFileIndent "./$1" "$2" | redirect_out
-        fi
+        includeBashFileIndent "./$1" "$2" | redirect_out
         sep
         cd "$CWD"
     fi

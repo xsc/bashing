@@ -38,7 +38,8 @@ function nl() {
 # This always writes to stdout
 function includeBashFile() {
     if [ -s "$1" ] && bash -n "$1"; then
-        if [[ "$PLAIN" == "yes" ]]; then
+        local plain=$(getMeta "$1" "plain")
+        if [[ "$plain" == "true" ]]; then
             cat "$1";
         else if [[ "$COMPACT" == "yes" ]]; then
             sed '/^\s*#.*$/d' "$1" | sed '/^\s*$/d';
@@ -51,5 +52,10 @@ function includeBashFile() {
 
 function includeBashFileIndent() {
     local indent="$2"
-    includeBashFile "$1" | sed "s/^/$indent/"
+    local plain=$(getMeta "$1" "plain")
+    if [[ "$plain" == "true" ]]; then
+        cat "$1";
+    else 
+        includeBashFile "$1" | sed "s/^/$indent/"
+    fi
 }
