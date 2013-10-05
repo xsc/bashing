@@ -59,3 +59,20 @@ function includeBashFileIndent() {
         includeBashFile "$1" | sed "s/^/$indent/"
     fi
 }
+
+# ----------------------------------------------------------------
+# Make Bash debuggable
+function debugBash() {
+    sed 's/^function\s\+\([^\s]\+\)()/\
+            function \1() {\
+                local ind="$___INDENT";\
+                printf "${ind}> enter:\1 %q\n" "$*" 1>\&2;\
+                export ___INDENT="$___INDENT  ";\
+                debugging___\1 "$@";\
+                export ___INDENT="$ind";\
+                local st="$?";\
+                printf "${ind}< leave:\1 %q\n" "$*" 1>\&2;\
+                return $st;\
+            }\
+            function debugging___\1()/' -;
+}
