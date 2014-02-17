@@ -136,8 +136,8 @@ function buildCliHeader() {
     print_out '  local pid=""'
     print_out '  local status=255'
     genInclude "before-task.sh" "  "
-    print_out '  local cmd="$1"'
-    print_out '  shift'
+    print_out '  local cmd="${1-}"'
+    print_out '  shift || true'
     print_out '  case "$cmd" in'
     print_out '    "") __run "help"; return $?;;'
 }
@@ -240,7 +240,7 @@ function generateStandaloneTask() {
     genInclude "init.sh"
     generateLibrary
     genInclude "before-task.sh"
-    print_out 'shift'
+    print_out 'shift || true'
     print_out 'function __run() { echo "__run not available when running CLI task directly!" 1>&2; exit 1; }'
     if [ -e "$CLI_PATH/$task" ]; then genInclude "tasks/$task";
     else genInclude "hidden-tasks/$task"; fi
