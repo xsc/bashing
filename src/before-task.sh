@@ -27,7 +27,7 @@ while [ $# -gt 0 ]; do
             GROUP_ID=$(artifactGroupId "$s")
             ARTIFACT_ID=$(artifactId "$s")
             ARTIFACT_VERSION=$(artifactVersion "$s")
-            if [ -z "$ARTIFACT_ID" -o -z "$ARTIFACT_VERSION" ]; then 
+            if [ -z "$ARTIFACT_ID" -o -z "$ARTIFACT_VERSION" ]; then
                 error "Invalid Artifact String in $BASHING_PROJECT_FILE: $s";
                 exit 1;
             fi
