@@ -8,7 +8,7 @@ Current stable Version: __0.2.1__
 ## Installation
 
 ```bash
-mkdir -p ~/.bin 
+mkdir -p ~/.bin
 curl -ko ~/.bin/bashing https://raw.github.com/xsc/bashing/stable/bin/bashing
 chmod +x ~/.bin/bashing
 ```
@@ -18,7 +18,7 @@ Make sure `~/.bin` is on your `$PATH`, e.g. by adding `export PATH="$PATH:~/.bin
 
 ## Usage
 
-Have a look at the [wiki](https://github.com/xsc/bashing/wiki) and the 
+Have a look at the [wiki](https://github.com/xsc/bashing/wiki) and the
 [Quickstart Tutorial](https://github.com/xsc/bashing/wiki/Quickstart-Tutorial). And if you want to examine
 a full-fledged Bashing project, why not [Bashing itself](https://github.com/xsc/bashing/tree/master/src)?
 
@@ -36,7 +36,7 @@ $ bashing uberbash
 Creating /git/public/shell/greet/target/greet-0.1.0-SNAPSHOT.sh ...
 Uberbash created successfully.
 
-$ ./target/greet-0.1.0-SNAPSHOT.sh 
+$ ./target/greet-0.1.0-SNAPSHOT.sh
 Usage: ./target/greet-0.1.0-SNAPSHOT.sh <command> [<parameters> ...]
 
     hello    :  (no help available)
@@ -72,8 +72,8 @@ Uberbash created successfully.
 
 This will create a standalone bashing script using bashing itself!
 
-## License 
+## License
 
-Copyright &copy; 2013 Yannick Scherer
+Copyright &copy; 2013-2015 Yannick Scherer
 
 Bashing is distributed under the MIT License.
