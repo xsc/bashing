@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # <help>create uberbash and copy to deploy path</help>
 

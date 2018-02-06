@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Parameters
 task="$1"
@@ -17,7 +17,7 @@ if ! mkdir -p "$dir"; then fatal "Could not create Directory: $dir"; fi
 if [ -e "$path" ]; then fatal "File does already exist: $path"; fi
 if ! touch "$path"; then fatal "Could not create File: $path"; fi
 
-echo "#!/bin/bash" > "$path"
+echo "#!/usr/bin/env bash" > "$path"
 echo "" >> "$path"
 echo "# Run with: 'bashing run $task'" >> "$path"
 echo "" >> "$path" >> "$path"

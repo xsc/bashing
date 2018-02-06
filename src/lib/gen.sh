@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #!require io
 
@@ -7,7 +7,7 @@
 # ------------------------------------------------------------
 # Header
 function generateHeader() {
-    print_out "#!/bin/bash"
+    print_out "#!/usr/bin/env bash"
     sep
     print_out "# $(head -c 45 /dev/zero | tr '\0' '-')";
     print_out "# Artifact:     $GROUP_ID/$ARTIFACT_ID"

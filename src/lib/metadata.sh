@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Read metadata from source files. Metadata is identified by
 # XML tags in commented lines.

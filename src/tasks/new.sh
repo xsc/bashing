@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # <help>initialize directories for a bashing project</help>
 
@@ -43,7 +43,7 @@ echo "YOUR DESCRIPTION HERE." >> "$PROJ"
 
 path="$TASKS/hello.sh"
 if ! touch "$path"; then fatal "Could not create File: $path"; fi
-echo "#!/bin/bash" > "$path"
+echo "#!/usr/bin/env bash" > "$path"
 echo "" >> "$path"
 echo "# Run with: 'bashing run hello'" >> "$path"
 echo "" >> "$path" >> "$path"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # ----------------------------------------------------------------
 # Write Functions for bashing. They check if a variable $OUT is set,
