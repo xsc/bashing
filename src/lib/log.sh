@@ -19,7 +19,7 @@ function success() {
 
 function verbose() {
     if [[ "$VERBOSE" != "no" ]] || [ -z "$VERBOSE" ]; then
-        echo "$@" 
+        echo "$@"
     fi
 }
 
