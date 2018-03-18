@@ -3,9 +3,16 @@
 __bashing__ is a small tool that let's you create single-file [Bash](http://www.gnu.org/software/bash/)
 tools in a multi-file way.
 
-Current stable Version: __0.2.1__
+Current stable Version: __0.2.2__
 
-## Installation
+## Setup
+
+### Dependencies
+
+bashing needs the GNU variant of `sed` to function properly. If you're on MacOS
+you can use e.g. Homebrew to install the package `gnu-sed`.
+
+### Installation
 
 ```bash
 mkdir -p ~/.bin

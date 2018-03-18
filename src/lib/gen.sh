@@ -84,12 +84,12 @@ function collectCliScripts() {
 
 function toFn() {
     local n="$1"
-    echo "cli_${n:2:-3}" | tr '/' '_' | sed 's/_+/_/g'
+    echo "cli_${n:2:${#n}-5}" | tr '/' '_' | sed 's/_+/_/g'
 }
 
 function toCliArg() {
     local n="$1"
-    echo "${n:2:-3}" | tr '/' '.'
+    echo "${n:2:${#n}-5}" | tr '/' '.'
 }
 
 function includeCliFn() {

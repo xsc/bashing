@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Checks
+check_tools
+
 # Generate Config Dir
 mkdir -p "$SETTINGS_DIR" 2> /dev/null || fatal "Could not initialize directory: $SETTINGS_DIR";
 
