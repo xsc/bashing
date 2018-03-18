@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ---------------------------------------------
 # Artifact:     bashing/bashing
 # Version:      0.2.1
@@ -55,7 +55,7 @@ function magenta() { colorize "${MAGENTA}" "${@}"; }
 function cyan() { colorize "${CYAN}" "${@}"; }
 function white() { colorize "${WHITE}" "${@}"; }
 function generateHeader() {
-    print_out "#!/bin/bash"
+    print_out "#!/usr/bin/env bash"
     sep
     print_out "# $(head -c 45 /dev/zero | tr '\0' '-')";
     print_out "# Artifact:     $GROUP_ID/$ARTIFACT_ID"
@@ -401,7 +401,7 @@ function cli_new() {
   echo "YOUR DESCRIPTION HERE." >> "$PROJ"
   path="$TASKS/hello.sh"
   if ! touch "$path"; then fatal "Could not create File: $path"; fi
-  echo "#!/bin/bash" > "$path"
+  echo "#!/usr/bin/env bash" > "$path"
   echo "" >> "$path"
   echo "# Run with: 'bashing run hello'" >> "$path"
   echo "" >> "$path" >> "$path"
@@ -467,7 +467,7 @@ function cli_uberbash() {
   fi
   if [[ "$COMPRESS" == "yes" ]]; then
       verbose "Compressing into $TARGET_FILE_COMPRESSED ..."
-      echo "#!/bin/bash" > "$TARGET_FILE_COMPRESSED"
+      echo "#!/usr/bin/env bash" > "$TARGET_FILE_COMPRESSED"
       echo 'tail -n +3 "$0" | gzip -d -n 2> /dev/null | bash -s "$@"; exit $?' >> "$TARGET_FILE_COMPRESSED"
       gzip -c -n "$TARGET_FILE" >> "$TARGET_FILE_COMPRESSED";
       if [[ "$?" != "0" ]]; then fatal "An error occured while running task 'compile'."; fi
@@ -555,7 +555,7 @@ function cli_new_task() {
   if ! mkdir -p "$dir"; then fatal "Could not create Directory: $dir"; fi
   if [ -e "$path" ]; then fatal "File does already exist: $path"; fi
   if ! touch "$path"; then fatal "Could not create File: $path"; fi
-  echo "#!/bin/bash" > "$path"
+  echo "#!/usr/bin/env bash" > "$path"
   echo "" >> "$path"
   echo "# Run with: 'bashing run $task'" >> "$path"
   echo "" >> "$path" >> "$path"

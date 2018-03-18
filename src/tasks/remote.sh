@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # <help>handle remote bashing applications</help>
 
 subtask="$1"

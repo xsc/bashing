@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # <help>create standalone bash script</help>
 
@@ -39,7 +39,7 @@ fi
 
 if [[ "$COMPRESS" == "yes" ]]; then
     verbose "Compressing into $TARGET_FILE_COMPRESSED ..."
-    echo "#!/bin/bash" > "$TARGET_FILE_COMPRESSED"
+    echo "#!/usr/bin/env bash" > "$TARGET_FILE_COMPRESSED"
     echo 'tail -n +3 "$0" | gzip -d -n 2> /dev/null | bash -s "$@"; exit $?' >> "$TARGET_FILE_COMPRESSED"
     gzip -c -n "$TARGET_FILE" >> "$TARGET_FILE_COMPRESSED";
     if [[ "$?" != "0" ]]; then fatal "An error occured while running task 'compile'."; fi
