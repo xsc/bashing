@@ -128,12 +128,11 @@ function buildCliHandler() {
     local path="$1"
     local fnName=$(toFn "$path")
     local argName=$(toCliArg "$path")
-    print_out "    \"$argName\") $fnName \"\$@\" & local pid=\"\$!\";;"
+    print_out "    \"$argName\") ($fnName \"\$@\"); status=\$?;;"
 }
 
 function buildCliHeader() {
     print_out "function __run() {"
-    print_out '  local pid=""'
     print_out '  local status=255'
     genInclude "before-task.sh" "  "
     print_out '  local cmd="${1-}"'
@@ -145,10 +144,6 @@ function buildCliHeader() {
 function buildCliFooter() {
     print_out '    *) echo "Unknown Command: $cmd" 1>&2;;'
     print_out '  esac'
-    print_out '  if [ ! -z "$pid" ]; then'
-    print_out '      wait "$pid"'
-    print_out '      local status=$?'
-    print_out '  fi'
     genInclude "after-task.sh" "  "
     print_out '  return $status'
     print_out "}"
