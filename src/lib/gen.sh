@@ -25,6 +25,7 @@ function generateMetadata() {
     print_out "export __VERSION='$ARTIFACT_VERSION'"
     print_out "export __ARTIFACT_ID='$ARTIFACT_ID'"
     print_out "export __GROUP_ID='$GROUP_ID'"
+    print_out "export __CLI_COMMANDS='$(collectCliCommands | tr '\n' ' ')'"
     sep
 }
 
@@ -79,6 +80,18 @@ function collectCliScripts() {
         cd "$HID_PATH"
         find "." -type f -name "*.sh" -not -size 0 | sort
         cd "$CWD"
+    fi
+}
+
+function collectCliCommands() {
+    if [ -d "$CLI_PATH" ]; then
+        cd "$CLI_PATH"
+        cliScripts=$(find "." -type f -name "*.sh" -not -size 0 | sort);
+        cd "$CWD"
+
+        for path in $cliScripts; do
+          echo "$(toCliArg "$path")"
+        done
     fi
 }
 
