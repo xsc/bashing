@@ -61,8 +61,29 @@ function generateLibrary() {
     comment "Library"
     nl
     cd "$SRC_PATH";
-    find "./lib" -type f -name "*.sh" | sort | includeLibFile
-    if [[ "$?" != "0" ]]; then exit 1; fi
+    local allLibs="$(find "./lib" -type f -name "*.sh" | sed -n 's|./lib/\(.*\).sh|\1|p')"
+    local sortedLibraries=()
+    while [[ -n "$allLibs" ]]; do
+        local libAdded=0
+        for lib in $allLibs; do
+            local addLib=1
+            for req in $(sed -n 's/^#!require //p' "./lib/$lib.sh"); do
+                if ! echo "${sortedLibraries[@]}" | grep -qw "$req"; then
+                    addLib=0
+                    break
+                fi
+            done
+            if [[ $addLib -eq 1 ]]; then
+                libAdded=1
+                sortedLibraries+=("$lib")
+                allLibs="$(echo "$allLibs" | grep -vw "$lib")"
+                echo "./lib/$lib.sh"
+                break
+            fi
+        done
+        [[ $libAdded -eq 1 ]] || fatal "Circular dependency in libraries."
+    done | includeLibFile
+    if [[ "${PIPESTATUS[0]}" != "0" ]]; then exit 1; fi
     sep
     cd "$CWD";
 }
